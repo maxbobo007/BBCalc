@@ -1,12 +1,12 @@
 {
-  "name": "currency-calculator",
-  "productName": "汇率计算器",
-  "version": "1.0.0",
-  "description": "专业的多货币汇率计算工具",
+  "name": "bbcalc",
+  "productName": "BBCalc",
+  "version": "1.4.2",
+  "description": "波波汇率计算器 - 专业的多货币汇率计算工具",
   "main": "main.js",
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "Max Zhou",
+    "email": "maxbobo007@gmail.com"
   },
   "license": "MIT",
   "scripts": {
@@ -21,9 +21,9 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.yourcompany.calculator",
-    "productName": "汇率计算器",
-    "copyright": "Copyright © 2025 Your Name",
+    "appId": "com.bbcalc.app",
+    "productName": "BBCalc",
+    "copyright": "Copyright © 2026 Max Zhou",
     "mac": {
       "category": "public.app-category.finance",
       "target": [
