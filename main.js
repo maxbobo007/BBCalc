@@ -241,4 +241,7 @@ app.whenReady().then(() => {
 // 所有窗口关闭时退出（Windows/Linux）
 // Mac上通常不退出应用
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
