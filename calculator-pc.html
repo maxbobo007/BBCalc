@@ -1333,6 +1333,11 @@
             if (currency === oldBase) return;
 
             // 互换位置：将旧基准货币放到被点击货币的位置
+            // 先移除旧基准货币（避免用户在设置里手动启用它时产生重复）
+            const oldBaseInOrder = currencyOrder.indexOf(oldBase);
+            if (oldBaseInOrder !== -1) {
+                currencyOrder.splice(oldBaseInOrder, 1);
+            }
             const clickedIndex = currencyOrder.indexOf(currency);
             if (clickedIndex !== -1) {
                 currencyOrder[clickedIndex] = oldBase;
