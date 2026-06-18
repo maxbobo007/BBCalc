@@ -1281,21 +1281,31 @@
         }
 
         function switchToConvertedCurrency(currency, value) {
-            if (value === 0) return;
-            
-            const oldCurrency = document.getElementById('baseCurrency').value;
-            if (currency === oldCurrency) return;
-            
+            const oldBase = document.getElementById('baseCurrency').value;
+            if (currency === oldBase) return;
+
+            // 互换位置：将旧基准货币放到被点击货币的位置
+            const clickedIndex = currencyOrder.indexOf(currency);
+            if (clickedIndex !== -1) {
+                currencyOrder[clickedIndex] = oldBase;
+            } else {
+                currencyOrder.push(oldBase);
+            }
+            localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+
+            // 切换基准货币
             document.getElementById('baseCurrency').value = currency;
             activeCurrency = currency;
             document.getElementById('activeCurrencyBadge').textContent = currency;
-            
-            result = value;
-            expression = value.toFixed(2);
-            
-            document.getElementById('result').textContent = value.toFixed(2);
-            document.getElementById('expression').textContent = '';
-            
+
+            // 如果有计算结果，更新显示值为换算后的金额
+            if (value !== 0) {
+                result = value;
+                expression = value.toFixed(2);
+                document.getElementById('result').textContent = value.toFixed(2);
+                document.getElementById('expression').textContent = '';
+            }
+
             updateConversion();
         }
 
