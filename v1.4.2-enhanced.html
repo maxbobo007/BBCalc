@@ -335,6 +335,46 @@
             cursor: grabbing;
         }
 
+        .currency-card.pinned-card {
+            border-color: rgba(255, 159, 10, 0.35);
+            background: rgba(255, 159, 10, 0.06);
+        }
+
+        .currency-card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .pin-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 0;
+            opacity: 0.2;
+            transition: opacity 0.2s, transform 0.2s;
+            line-height: 1;
+            transform: rotate(45deg);
+        }
+
+        .pin-btn:hover {
+            opacity: 0.7;
+        }
+
+        .pin-btn.pinned {
+            opacity: 1;
+            transform: rotate(0deg);
+        }
+
+        .pinned-divider {
+            grid-column: 1 / -1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 2px 0;
+        }
+
         .currency-card.active {
             border-color: #0A84FF;
             background: rgba(10, 132, 255, 0.1);
@@ -935,6 +975,9 @@
         // 货币排序（保存用户拖拽的顺序）
         let currencyOrder = JSON.parse(localStorage.getItem('currencyOrder')) || displayCurrencies.slice();
 
+        // 置顶货币
+        let pinnedCurrencies = new Set(JSON.parse(localStorage.getItem('pinnedCurrencies')) || []);
+
         // 默认基准货币
         let defaultBaseCurrency = localStorage.getItem('defaultBaseCurrency') || 'CNY';
 
@@ -1152,60 +1195,65 @@
         function updateConversion() {
             const baseCurrency = document.getElementById('baseCurrency').value;
             const grid = document.getElementById('conversionGrid');
-
             grid.innerHTML = '';
 
-            // 使用排序后的货币列表
-            const sortedCurrencies = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
+            const filtered = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
+            const pinnedList = filtered.filter(c => pinnedCurrencies.has(c));
+            const unpinnedList = filtered.filter(c => !pinnedCurrencies.has(c));
+
+            function createCard(currency, value) {
+                const isPinned = pinnedCurrencies.has(currency);
+                const card = document.createElement('div');
+                card.className = 'currency-card'
+                    + (currency === activeCurrency ? ' active' : '')
+                    + (isPinned ? ' pinned-card' : '');
+                card.setAttribute('draggable', 'true');
+                card.dataset.currency = currency;
+                card.onclick = () => switchToConvertedCurrency(currency, value);
+
+                const displayVal = value !== null
+                    ? value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '0.00';
+
+                card.innerHTML = `
+                    <div class="currency-info">
+                        <div class="currency-code">${currencyFlags[currency] || ''} ${currency}</div>
+                        <div class="currency-name">${getCurrencyName(currency)}</div>
+                    </div>
+                    <div class="currency-card-right">
+                        <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="togglePin('${currency}', event)" title="${isPinned ? '取消置顶' : '置顶'}">📌</button>
+                        <div class="currency-value">${displayVal}</div>
+                    </div>
+                `;
+                addDragListeners(card);
+                return card;
+            }
+
+            function appendDivider() {
+                if (pinnedList.length > 0 && unpinnedList.length > 0) {
+                    const divider = document.createElement('div');
+                    divider.className = 'pinned-divider';
+                    grid.appendChild(divider);
+                }
+            }
 
             if (result !== 0 && exchangeRates[baseCurrency]) {
                 const amountInUSD = result / exchangeRates[baseCurrency];
-
-                sortedCurrencies.forEach(currency => {
+                pinnedList.forEach(currency => {
                     if (exchangeRates[currency]) {
-                        const converted = amountInUSD * exchangeRates[currency];
-                        const formattedValue = converted.toLocaleString('zh-CN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-
-                        const card = document.createElement('div');
-                        card.className = 'currency-card' + (currency === activeCurrency ? ' active' : '');
-                        card.setAttribute('draggable', 'true');
-                        card.dataset.currency = currency;
-                        card.onclick = () => switchToConvertedCurrency(currency, converted);
-                        card.innerHTML = `
-                            <div class="currency-info">
-                                <div class="currency-code">${currencyFlags[currency] || ''} ${currency}</div>
-                                <div class="currency-name">${getCurrencyName(currency)}</div>
-                            </div>
-                            <div class="currency-value">${formattedValue}</div>
-                        `;
-
-                        // 添加拖拽事件
-                        addDragListeners(card);
-                        grid.appendChild(card);
+                        grid.appendChild(createCard(currency, amountInUSD * exchangeRates[currency]));
+                    }
+                });
+                appendDivider();
+                unpinnedList.forEach(currency => {
+                    if (exchangeRates[currency]) {
+                        grid.appendChild(createCard(currency, amountInUSD * exchangeRates[currency]));
                     }
                 });
             } else {
-                sortedCurrencies.forEach(currency => {
-                    const card = document.createElement('div');
-                    card.className = 'currency-card';
-                    card.setAttribute('draggable', 'true');
-                    card.dataset.currency = currency;
-                    card.onclick = () => switchToConvertedCurrency(currency, 0);
-                    card.innerHTML = `
-                        <div class="currency-info">
-                            <div class="currency-code">${currencyFlags[currency] || ''} ${currency}</div>
-                            <div class="currency-name">${getCurrencyName(currency)}</div>
-                        </div>
-                        <div class="currency-value">0.00</div>
-                    `;
-
-                    // 添加拖拽事件
-                    addDragListeners(card);
-                    grid.appendChild(card);
-                });
+                pinnedList.forEach(currency => grid.appendChild(createCard(currency, null)));
+                appendDivider();
+                unpinnedList.forEach(currency => grid.appendChild(createCard(currency, null)));
             }
         }
 
@@ -1306,6 +1354,17 @@
                 document.getElementById('expression').textContent = '';
             }
 
+            updateConversion();
+        }
+
+        function togglePin(currency, event) {
+            event.stopPropagation();
+            if (pinnedCurrencies.has(currency)) {
+                pinnedCurrencies.delete(currency);
+            } else {
+                pinnedCurrencies.add(currency);
+            }
+            localStorage.setItem('pinnedCurrencies', JSON.stringify([...pinnedCurrencies]));
             updateConversion();
         }
 
