@@ -1885,29 +1885,17 @@
             try {
                 const snap = await getDoc(doc(db, 'users', uid, 'config', 'settings'));
 
-                const localDisplay = JSON.parse(localStorage.getItem('displayCurrencies')) || [];
-                const localOrder   = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
-
                 if (!snap.exists()) {
-                    // 云端没有数据，把本地状态同步上去
-                    if (localDisplay.length > 0) saveToCloud();
+                    saveToCloud();
                     return;
                 }
 
                 const data = snap.data();
 
-                // displayCurrencies：取本地和云端的并集，永远不删货币
-                const cloudDisplay = data.displayCurrencies || [];
-                const mergedDisplay = [...new Set([...localDisplay, ...cloudDisplay])];
-                if (mergedDisplay.length > 0) {
-                    localStorage.setItem('displayCurrencies', JSON.stringify(mergedDisplay));
-                }
-
-                // currencyOrder：用云端顺序（包含新增的），缺失的补在末尾
+                // currencyOrder：用云端顺序
                 const cloudOrder = data.currencyOrder || [];
                 if (cloudOrder.length > 0) {
-                    const missing = mergedDisplay.filter(c => !cloudOrder.includes(c));
-                    localStorage.setItem('currencyOrder', JSON.stringify([...cloudOrder, ...missing]));
+                    localStorage.setItem('currencyOrder', JSON.stringify(cloudOrder));
                 }
 
                 if (data.pinnedCurrencies) localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
@@ -1931,12 +1919,9 @@
                 try {
                     const currencyOrder     = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
                     const pinnedCurrencies  = JSON.parse(localStorage.getItem('pinnedCurrencies')) || [];
-                    const displayCurrencies = JSON.parse(localStorage.getItem('displayCurrencies'))|| [];
-                    if (displayCurrencies.length === 0) return; // 不保存空数据
                     await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
                         currencyOrder,
                         pinnedCurrencies,
-                        displayCurrencies,
                         themeMode:       localStorage.getItem('themeMode')           || 'auto',
                         appLanguage:     localStorage.getItem('appLanguage')          || 'zh',
                         defaultCurrency: localStorage.getItem('defaultBaseCurrency')  || 'CNY',
@@ -1977,7 +1962,6 @@
                 await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
                     currencyOrder,
                     pinnedCurrencies,
-                    displayCurrencies,
                     themeMode:       localStorage.getItem('themeMode')          || 'auto',
                     appLanguage:     localStorage.getItem('appLanguage')         || 'zh',
                     defaultCurrency: localStorage.getItem('defaultBaseCurrency') || 'CNY',
