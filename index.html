@@ -1848,16 +1848,39 @@
         async function loadFromCloud(uid) {
             try {
                 const snap = await getDoc(doc(db, 'users', uid, 'config', 'settings'));
-                if (!snap.exists()) return;
+
+                const localDisplay = JSON.parse(localStorage.getItem('displayCurrencies')) || [];
+                const localOrder   = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
+
+                if (!snap.exists()) {
+                    // 云端没有数据，把本地状态同步上去
+                    if (localDisplay.length > 0) saveToCloud();
+                    return;
+                }
+
                 const data = snap.data();
-                // 只应用非空数据，防止覆盖本地有效配置
-                if (data.currencyOrder    && data.currencyOrder.length > 0)    localStorage.setItem('currencyOrder',    JSON.stringify(data.currencyOrder));
-                if (data.pinnedCurrencies)                                       localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
-                if (data.displayCurrencies && data.displayCurrencies.length > 0) localStorage.setItem('displayCurrencies', JSON.stringify(data.displayCurrencies));
-                if (data.themeMode)        localStorage.setItem('themeMode',           data.themeMode);
-                if (data.appLanguage)      localStorage.setItem('appLanguage',          data.appLanguage);
-                if (data.defaultCurrency)  localStorage.setItem('defaultBaseCurrency',  data.defaultCurrency);
-                // 重新加载页面以应用所有云端配置（只在非刚刚登录引起的reload时执行）
+
+                // displayCurrencies：云端数据少于本地时以本地为准，并重新同步云端
+                const cloudDisplay = data.displayCurrencies || [];
+                if (cloudDisplay.length >= localDisplay.length && cloudDisplay.length > 0) {
+                    localStorage.setItem('displayCurrencies', JSON.stringify(cloudDisplay));
+                } else if (localDisplay.length > 0) {
+                    // 本地更多，覆盖云端
+                    saveToCloud();
+                }
+
+                // currencyOrder：同样逻辑
+                const cloudOrder = data.currencyOrder || [];
+                if (cloudOrder.length >= localOrder.length && cloudOrder.length > 0) {
+                    localStorage.setItem('currencyOrder', JSON.stringify(cloudOrder));
+                }
+
+                if (data.pinnedCurrencies) localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
+                if (data.themeMode)        localStorage.setItem('themeMode',          data.themeMode);
+                if (data.appLanguage)      localStorage.setItem('appLanguage',         data.appLanguage);
+                if (data.defaultCurrency)  localStorage.setItem('defaultBaseCurrency', data.defaultCurrency);
+
+                // 重新加载以应用配置（防止循环 reload）
                 if (!sessionStorage.getItem('cloudLoaded')) {
                     sessionStorage.setItem('cloudLoaded', '1');
                     location.reload();
