@@ -1292,12 +1292,41 @@
         function updateConversion() {
             const baseCurrency = document.getElementById('baseCurrency').value;
             const grid = document.getElementById('conversionGrid');
-            grid.innerHTML = '';
 
             const filtered = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
             const pinnedList = filtered.filter(c => pinnedCurrencies.has(c));
             const unpinnedList = filtered.filter(c => !pinnedCurrencies.has(c));
 
+            // Check if we can just update values in-place (same cards, same order)
+            const existingCards = [...grid.querySelectorAll('.currency-card')];
+            const existingOrder = existingCards.map(c => c.dataset.currency);
+            const newOrder = [...pinnedList, ...unpinnedList].filter(c => exchangeRates[c] || result === 0);
+
+            const canUpdateInPlace = existingOrder.length === newOrder.length
+                && existingOrder.every((c, i) => c === newOrder[i]);
+
+            if (canUpdateInPlace && existingCards.length > 0) {
+                // Just update the value text, no DOM rebuild
+                const amountInUSD = (result !== 0 && exchangeRates[baseCurrency])
+                    ? result / exchangeRates[baseCurrency] : null;
+                existingCards.forEach(card => {
+                    const currency = card.dataset.currency;
+                    const valueEl = card.querySelector('.currency-value');
+                    if (valueEl) {
+                        const val = amountInUSD !== null && exchangeRates[currency]
+                            ? amountInUSD * exchangeRates[currency] : null;
+                        valueEl.textContent = val !== null
+                            ? val.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : '0.00';
+                        // Update onclick with fresh value for swap
+                        card.onclick = () => switchToConvertedCurrency(currency, val !== null ? val : 0);
+                    }
+                });
+                return;
+            }
+
+            // Full rebuild (currency list/order/pinned changed)
+            grid.innerHTML = '';
             let _cardIndex = 0;
 
             function createCard(currency, value) {
@@ -1308,7 +1337,7 @@
                     + (isPinned ? ' pinned-card' : '');
                 card.setAttribute('draggable', 'true');
                 card.dataset.currency = currency;
-                card.onclick = () => switchToConvertedCurrency(currency, value);
+                card.onclick = () => switchToConvertedCurrency(currency, value !== null ? value : 0);
                 card.style.animationDelay = `${_cardIndex * 28}ms`;
                 _cardIndex++;
 
