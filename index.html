@@ -5,19 +5,568 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>波波汇率计算器 v1.4.0 - BBCalc</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            background: #0e0d12;
             min-height: 100vh;
-            color: white;
-            padding: 40px;
+            color: #e6e1e5;
+            padding: 32px;
         }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+            height: calc(100vh - 64px);
+        }
+
+        .calculator-panel {
+            background: #1c1b1f;
+            border-radius: 28px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border: 1px solid rgba(202,196,208,0.08);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #e6e1e5;
+            letter-spacing: -0.3px;
+        }
+
+        .active-currency-badge {
+            background: rgba(168,199,250,0.15);
+            color: #a8c7fa;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-btn {
+            background: #2b2930;
+            border: 1px solid rgba(202,196,208,0.1);
+            border-radius: 50px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #cac4d0;
+            font-size: 17px;
+            transition: all 0.25s cubic-bezier(0.2,0,0,1);
+        }
+
+        .settings-btn:hover {
+            background: #36343b;
+            transform: rotate(45deg);
+        }
+
+        .currency-selector {
+            background: #2b2930;
+            border-radius: 14px;
+            padding: 11px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(202,196,208,0.07);
+        }
+
+        .currency-selector label {
+            font-size: 12px;
+            color: #938f99;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .currency-selector select {
+            background: transparent;
+            border: none;
+            color: #a8c7fa;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 4px 8px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .currency-selector select option {
+            background: #2b2930;
+            color: #e6e1e5;
+        }
+
+        .display {
+            background: #2b2930;
+            border-radius: 20px;
+            padding: 22px 26px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            border: 1px solid rgba(202,196,208,0.06);
+        }
+
+        .expression {
+            color: #938f99;
+            font-size: 15px;
+            margin-bottom: 6px;
+            min-height: 18px;
+            text-align: right;
+            font-weight: 400;
+        }
+
+        .result {
+            font-size: 50px;
+            font-weight: 300;
+            color: #e6e1e5;
+            text-align: right;
+            line-height: 1.1;
+            letter-spacing: -1.5px;
+            position: relative;
+            transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .result.flash { animation: flash 0.25s ease; }
+
+        @keyframes flash {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.55; transform: scale(1.01); }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 42px;
+            background: #a8c7fa;
+            margin-left: 4px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            border-radius: 2px;
+        }
+
+        @keyframes blink {
+            0%,49% { opacity: 1; }
+            50%,100% { opacity: 0; }
+        }
+
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 9px;
+            flex: 1;
+        }
+
+        .calc-button {
+            background: #2b2930;
+            border: none;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: background 0.12s ease, transform 0.08s ease;
+            color: #e6e1e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            height: 66px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calc-button:hover { background: #36343b; }
+        .calc-button:active { transform: scale(0.95); }
+
+        .calc-button.function {
+            background: #302e35;
+            color: #cac4d0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .calc-button.function:hover { background: #3a3840; }
+
+        .calc-button.operator {
+            background: rgba(66,133,244,0.18);
+            color: #a8c7fa;
+            font-size: 26px;
+        }
+
+        .calc-button.operator:hover { background: rgba(66,133,244,0.28); }
+
+        .calc-button.equals {
+            background: #4285f4;
+            color: white;
+        }
+
+        .calc-button.equals:hover { background: #5a95f5; }
+
+        .calc-button.zero { grid-column: span 2; }
+
+        .calc-button.backspace {
+            background: rgba(255,100,80,0.15);
+            color: #ffb4ab;
+            font-size: 20px;
+        }
+
+        .calc-button.backspace:hover { background: rgba(255,100,80,0.25); }
+
+        .conversion-panel {
+            background: #1c1b1f;
+            border-radius: 28px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(202,196,208,0.08);
+        }
+
+        .conversion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(202,196,208,0.08);
+        }
+
+        .conversion-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e6e1e5;
+        }
+
+        .search-box {
+            background: #2b2930;
+            border: 1px solid rgba(202,196,208,0.12);
+            border-radius: 50px;
+            padding: 9px 18px;
+            color: #e6e1e5;
+            font-size: 13px;
+            width: 210px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus { border-color: #4285f4; }
+        .search-box::placeholder { color: #938f99; }
+
+        .conversion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+            gap: 9px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .conversion-grid::-webkit-scrollbar { width: 4px; }
+        .conversion-grid::-webkit-scrollbar-track { background: transparent; }
+        .conversion-grid::-webkit-scrollbar-thumb {
+            background: rgba(202,196,208,0.18);
+            border-radius: 10px;
+        }
+
+        .currency-card {
+            background: #2b2930;
+            border-radius: 16px;
+            padding: 13px 16px;
+            cursor: pointer;
+            transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+            border: 1px solid rgba(202,196,208,0.07);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .currency-card.dragging {
+            opacity: 0.35;
+            cursor: grabbing;
+            transform: scale(0.95) rotate(1deg);
+        }
+
+        .currency-card.drag-over {
+            border-color: #4285f4;
+            background: rgba(66,133,244,0.1);
+            transform: scale(1.02);
+        }
+
+        .currency-card:hover {
+            background: #322f37;
+            border-color: rgba(202,196,208,0.14);
+            transform: translateY(-1px);
+        }
+
+        .currency-card:active { transform: translateY(0); cursor: grabbing; }
+
+        .currency-card.pinned-card {
+            border-color: rgba(66,133,244,0.35);
+            background: rgba(66,133,244,0.07);
+        }
+
+        .currency-card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .pin-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            opacity: 0.18;
+            transition: opacity 0.2s, transform 0.2s;
+            line-height: 1;
+            transform: rotate(45deg);
+        }
+
+        .pin-btn:hover { opacity: 0.65; }
+        .pin-btn.pinned { opacity: 1; transform: rotate(0deg); }
+
+        .pinned-divider {
+            grid-column: 1 / -1;
+            height: 1px;
+            background: rgba(202,196,208,0.08);
+            margin: 2px 0;
+        }
+
+        .currency-card.active {
+            border-color: #4285f4;
+            background: rgba(66,133,244,0.1);
+        }
+
+        .currency-info { display: flex; flex-direction: column; gap: 2px; }
+
+        .currency-code {
+            font-size: 17px;
+            font-weight: 600;
+            color: #e6e1e5;
+        }
+
+        .currency-name {
+            font-size: 11px;
+            color: #938f99;
+        }
+
+        .currency-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #a8c7fa;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+        }
+
+        .rate-info {
+            margin-top: auto;
+            padding-top: 14px;
+            text-align: center;
+            color: #938f99;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .update-btn {
+            background: none;
+            border: 1px solid rgba(168,199,250,0.28);
+            color: #a8c7fa;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 7px;
+            padding: 5px 14px;
+            border-radius: 50px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .update-btn:hover {
+            background: rgba(168,199,250,0.1);
+            border-color: rgba(168,199,250,0.5);
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.72);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(14px);
+        }
+
+        .settings-overlay.active { display: flex; }
+
+        .settings-panel {
+            background: #1c1b1f;
+            border-radius: 28px;
+            border: 1px solid rgba(202,196,208,0.1);
+            width: 90%;
+            max-width: 880px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 36px;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(202,196,208,0.08);
+        }
+
+        .settings-title {
+            font-size: 26px;
+            font-weight: 600;
+            color: #e6e1e5;
+        }
+
+        .close-btn {
+            background: #2b2930;
+            border: none;
+            border-radius: 50px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #cac4d0;
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover { background: #36343b; }
+
+        .section-title {
+            font-size: 11px;
+            color: #938f99;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin: 26px 0 12px;
+            font-weight: 600;
+        }
+
+        .currency-grid-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+            gap: 9px;
+        }
+
+        .currency-item {
+            background: #2b2930;
+            border-radius: 14px;
+            padding: 13px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+            border: 1px solid rgba(202,196,208,0.06);
+        }
+
+        .currency-item:hover { background: #322f37; }
+
+        .currency-item-info { display: flex; flex-direction: column; }
+
+        .currency-item-code {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6e1e5;
+        }
+
+        .currency-item-name {
+            font-size: 11px;
+            color: #938f99;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 46px;
+            height: 26px;
+        }
+
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #49454f;
+            transition: 0.25s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #cac4d0;
+            transition: 0.25s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider { background-color: #4285f4; }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: white;
+        }
+
+        @media (max-width: 1200px) {
+            .container { grid-template-columns: 380px 1fr; }
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 16px; }
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(300px, 40vh) 1fr;
+                height: calc(100vh - 32px);
+                gap: 14px;
+            }
+            .conversion-panel { order: -1; height: 100%; overflow: hidden; }
+            .conversion-grid { max-height: calc(100% - 80px); }
+            .calculator-panel { max-width: 100%; height: 100%; padding: 18px; }
+            .title { font-size: 20px; }
+            .calc-button { min-height: 52px; font-size: 20px; }
+            .calc-button.function { font-size: 17px; }
+            .calc-button.operator { font-size: 24px; }
+            .result { font-size: 40px; }
+        }
+
+        @media (max-width: 600px) {
+            .container { grid-template-rows: minmax(250px, 35vh) 1fr; }
+            .calc-button { min-height: 46px; font-size: 19px; }
+            .result { font-size: 34px; }
+            .conversion-title { font-size: 16px; }
+        }
+    </style>
 
         .container {
             max-width: 1600px;
@@ -656,17 +1205,7 @@
         }
     </style>
     <style>
-        /* ── Material Design / Google 风格增强 ── */
-
-        body {
-            background: linear-gradient(145deg, #0c0c18 0%, #080810 100%);
-        }
-
-        /* 面板增强阴影 */
-        .calculator-panel, .conversion-panel {
-            box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.05) inset;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+        /* ── Material Design 动效增强 ── */
 
         /* 水波纹 Ripple */
         .calc-button {
