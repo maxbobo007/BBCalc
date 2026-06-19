@@ -1554,12 +1554,11 @@
             if (dragState.rafId) cancelAnimationFrame(dragState.rafId);
             const { card, ghost, currency, placeholder, grid } = dragState;
 
-            // 找到占位符现在的位置，确定新顺序
-            const allCards = [...grid.querySelectorAll('.currency-card:not(.dragging):not(.drag-placeholder-el)')];
-            const placeholderIdx = [...grid.children].indexOf(placeholder);
-            const before = [...grid.children].slice(0, placeholderIdx)
-                .filter(el => el.dataset.currency && !el.classList.contains('dragging'));
-            const newIdx = before.length;
+            // 占位符后面那张卡就是插入目标
+            const nextCard = [...grid.children]
+                .slice([...grid.children].indexOf(placeholder) + 1)
+                .find(el => el.dataset.currency);
+            const nextCurrency = nextCard?.dataset.currency || null;
 
             placeholder.remove();
             ghost.remove();
@@ -1573,13 +1572,16 @@
 
             dragState = null;
 
-            // 提交新顺序
+            // 简单 splice：从原位移出，插到目标前（或末尾）
             const from = currencyOrder.indexOf(currency);
-            const visibleOrder = allCards.map(c => c.dataset.currency);
-            visibleOrder.splice(newIdx, 0, currency);
-            const notVisible = currencyOrder.filter(c => !visibleOrder.includes(c));
-            currencyOrder.length = 0;
-            currencyOrder.push(...visibleOrder, ...notVisible);
+            if (from !== -1) currencyOrder.splice(from, 1);
+            if (nextCurrency) {
+                const to = currencyOrder.indexOf(nextCurrency);
+                if (to !== -1) currencyOrder.splice(to, 0, currency);
+                else currencyOrder.push(currency);
+            } else {
+                currencyOrder.push(currency);
+            }
             localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
             if (window.saveToCloud) saveToCloud();
             updateConversion();
