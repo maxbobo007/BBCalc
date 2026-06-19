@@ -1895,19 +1895,18 @@
 
                 const data = snap.data();
 
-                // displayCurrencies：云端数据少于本地时以本地为准，并重新同步云端
+                // displayCurrencies：取本地和云端的并集，永远不删货币
                 const cloudDisplay = data.displayCurrencies || [];
-                if (cloudDisplay.length >= localDisplay.length && cloudDisplay.length > 0) {
-                    localStorage.setItem('displayCurrencies', JSON.stringify(cloudDisplay));
-                } else if (localDisplay.length > 0) {
-                    // 本地更多，覆盖云端
-                    saveToCloud();
+                const mergedDisplay = [...new Set([...localDisplay, ...cloudDisplay])];
+                if (mergedDisplay.length > 0) {
+                    localStorage.setItem('displayCurrencies', JSON.stringify(mergedDisplay));
                 }
 
-                // currencyOrder：同样逻辑
+                // currencyOrder：用云端顺序（包含新增的），缺失的补在末尾
                 const cloudOrder = data.currencyOrder || [];
-                if (cloudOrder.length >= localOrder.length && cloudOrder.length > 0) {
-                    localStorage.setItem('currencyOrder', JSON.stringify(cloudOrder));
+                if (cloudOrder.length > 0) {
+                    const missing = mergedDisplay.filter(c => !cloudOrder.includes(c));
+                    localStorage.setItem('currencyOrder', JSON.stringify([...cloudOrder, ...missing]));
                 }
 
                 if (data.pinnedCurrencies) localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
