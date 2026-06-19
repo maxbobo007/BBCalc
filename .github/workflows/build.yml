@@ -22,9 +22,7 @@ jobs:
         run: npm install
 
       - name: Build Mac app (Universal)
-        run: npm run build:mac-universal
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:mac-universal -- --publish never
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
