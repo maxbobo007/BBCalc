@@ -1297,7 +1297,6 @@
             const baseCurrency = document.getElementById('baseCurrency').value;
             const grid = document.getElementById('conversionGrid');
             grid.innerHTML = '';
-            _cardIndex = 0;
 
             const filtered = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
             const pinnedList = filtered.filter(c => pinnedCurrencies.has(c));
