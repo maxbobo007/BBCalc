@@ -1822,30 +1822,39 @@
                 const snap = await getDoc(doc(db, 'users', uid, 'config', 'settings'));
                 if (!snap.exists()) return;
                 const data = snap.data();
-                if (data.currencyOrder)    { window.currencyOrder = data.currencyOrder; localStorage.setItem('currencyOrder', JSON.stringify(data.currencyOrder)); }
-                if (data.pinnedCurrencies) { window.pinnedCurrencies = new Set(data.pinnedCurrencies); localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies)); }
-                if (data.displayCurrencies){ window.displayCurrencies = data.displayCurrencies; localStorage.setItem('selectedCurrencies', JSON.stringify(data.displayCurrencies)); }
-                if (data.themeMode)        { window.themeMode = data.themeMode; localStorage.setItem('themeMode', data.themeMode); applyTheme(data.themeMode); }
-                if (data.appLanguage)      { localStorage.setItem('appLanguage', data.appLanguage); setLanguage(data.appLanguage); }
-                if (data.defaultCurrency)  { localStorage.setItem('defaultBaseCurrency', data.defaultCurrency); }
-                updateConversion();
+                // 只应用非空数据，防止覆盖本地有效配置
+                if (data.currencyOrder    && data.currencyOrder.length > 0)    localStorage.setItem('currencyOrder',    JSON.stringify(data.currencyOrder));
+                if (data.pinnedCurrencies)                                       localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
+                if (data.displayCurrencies && data.displayCurrencies.length > 0) localStorage.setItem('displayCurrencies', JSON.stringify(data.displayCurrencies));
+                if (data.themeMode)        localStorage.setItem('themeMode',           data.themeMode);
+                if (data.appLanguage)      localStorage.setItem('appLanguage',          data.appLanguage);
+                if (data.defaultCurrency)  localStorage.setItem('defaultBaseCurrency',  data.defaultCurrency);
+                // 重新加载页面以应用所有云端配置（只在非刚刚登录引起的reload时执行）
+                if (!sessionStorage.getItem('cloudLoaded')) {
+                    sessionStorage.setItem('cloudLoaded', '1');
+                    location.reload();
+                }
             } catch(e) { console.warn('云端读取失败', e); }
         }
 
-        // 保存到云端（防抖 2 秒）
+        // 保存到云端（防抖 2 秒），直接读 localStorage 保证数据准确
         window.saveToCloud = function() {
             if (!currentUser) return;
             clearTimeout(syncTimeout);
             syncTimeout = setTimeout(async () => {
                 try {
+                    const currencyOrder     = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
+                    const pinnedCurrencies  = JSON.parse(localStorage.getItem('pinnedCurrencies')) || [];
+                    const displayCurrencies = JSON.parse(localStorage.getItem('displayCurrencies'))|| [];
+                    if (displayCurrencies.length === 0) return; // 不保存空数据
                     await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
-                        currencyOrder:    window.currencyOrder || [],
-                        pinnedCurrencies: [...(window.pinnedCurrencies || [])],
-                        displayCurrencies:window.displayCurrencies || [],
-                        themeMode:        window.themeMode || 'auto',
-                        appLanguage:      localStorage.getItem('appLanguage') || 'zh',
-                        defaultCurrency:  localStorage.getItem('defaultBaseCurrency') || 'CNY',
-                        updatedAt:        Date.now()
+                        currencyOrder,
+                        pinnedCurrencies,
+                        displayCurrencies,
+                        themeMode:       localStorage.getItem('themeMode')           || 'auto',
+                        appLanguage:     localStorage.getItem('appLanguage')          || 'zh',
+                        defaultCurrency: localStorage.getItem('defaultBaseCurrency')  || 'CNY',
+                        updatedAt:       Date.now()
                     });
                 } catch(e) { console.warn('云端保存失败', e); }
             }, 2000);
