@@ -352,15 +352,11 @@
             transition: box-shadow 0.15s ease;
         }
 
-        .currency-card.drag-over {
-            transform: scale(0.97);
+        .drag-placeholder-el {
+            border: 2px dashed var(--primary);
             background: var(--primary-c);
-            border-color: var(--primary);
-            transition: transform 0.15s ease, background 0.15s ease;
-        }
-
-        .currency-card:not(.dragging):not(.drag-ghost) {
-            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+            border-radius: 18px;
+            opacity: 0.5;
         }
 
         .currency-card:hover {
@@ -1456,11 +1452,32 @@
             }
         }
 
-        // ── 拖拽排序（pointer events + rAF，GPU 加速）──
+        // ── 拖拽排序（pointer events + FLIP 让位动画）──
         let dragState = null;
 
         function addDragListeners(card) {
             card.addEventListener('pointerdown', onDragStart);
+        }
+
+        function flipCards(grid, fn) {
+            // FLIP: 记录位置 → 执行 DOM 变化 → 动画回到新位置
+            const cards = [...grid.querySelectorAll('.currency-card:not(.dragging)')];
+            const first = new Map(cards.map(c => [c, c.getBoundingClientRect()]));
+            fn();
+            cards.forEach(c => {
+                const f = first.get(c);
+                const l = c.getBoundingClientRect();
+                const dy = f.top - l.top;
+                const dx = f.left - l.left;
+                if (Math.abs(dy) > 0.5 || Math.abs(dx) > 0.5) {
+                    c.style.transition = 'none';
+                    c.style.transform = `translate(${dx}px,${dy}px)`;
+                    requestAnimationFrame(() => {
+                        c.style.transition = 'transform 0.2s ease';
+                        c.style.transform = '';
+                    });
+                }
+            });
         }
 
         function onDragStart(e) {
@@ -1469,17 +1486,25 @@
 
             const card = e.currentTarget;
             const rect = card.getBoundingClientRect();
+            const grid = document.getElementById('conversionGrid');
 
+            // 占位符撑住原来的空间
+            const placeholder = document.createElement('div');
+            placeholder.className = 'drag-placeholder-el currency-card';
+            placeholder.style.height = rect.height + 'px';
+            grid.insertBefore(placeholder, card);
+
+            // ghost 跟手
             const ghost = card.cloneNode(true);
             ghost.classList.add('drag-ghost');
-            ghost.style.width  = rect.width + 'px';
-            ghost.style.left   = rect.left  + 'px';
-            ghost.style.top    = rect.top   + 'px';
+            ghost.style.width = rect.width + 'px';
+            ghost.style.left  = rect.left  + 'px';
+            ghost.style.top   = rect.top   + 'px';
             document.body.appendChild(ghost);
             card.classList.add('dragging');
 
             dragState = {
-                card, ghost,
+                card, ghost, placeholder, grid,
                 offsetX: e.clientX - rect.left,
                 offsetY: e.clientY - rect.top,
                 currency: card.dataset.currency,
@@ -1503,32 +1528,44 @@
         function rafDrag() {
             if (!dragState) return;
             dragState.rafId = null;
-            const { ghost, offsetX, offsetY, card, lastX, lastY } = dragState;
+            const { ghost, offsetX, offsetY, card, placeholder, grid, lastX, lastY } = dragState;
 
-            // GPU 加速移动：用 transform 代替 left/top
             ghost.style.left = (lastX - offsetX) + 'px';
             ghost.style.top  = (lastY - offsetY) + 'px';
 
             ghost.style.visibility = 'hidden';
-            const target = document.elementFromPoint(lastX, lastY)?.closest('.currency-card');
+            const target = document.elementFromPoint(lastX, lastY)?.closest('.currency-card:not(.dragging):not(.drag-placeholder-el)');
             ghost.style.visibility = '';
 
-            const next = (target && target !== card) ? target : null;
-            if (dragState.overCard !== next) {
-                if (dragState.overCard) dragState.overCard.classList.remove('drag-over');
-                if (next) next.classList.add('drag-over');
-                dragState.overCard = next;
+            if (target && target !== dragState.overCard) {
+                dragState.overCard = target;
+                // FLIP: 把占位符移到目标卡片前/后
+                const pIdx = [...grid.children].indexOf(placeholder);
+                const tIdx = [...grid.children].indexOf(target);
+                flipCards(grid, () => {
+                    if (tIdx > pIdx) grid.insertBefore(placeholder, target.nextSibling);
+                    else             grid.insertBefore(placeholder, target);
+                });
             }
         }
 
         function onDragEnd(e) {
             if (!dragState) return;
             if (dragState.rafId) cancelAnimationFrame(dragState.rafId);
-            const { card, ghost, currency, overCard } = dragState;
+            const { card, ghost, currency, placeholder, grid } = dragState;
 
+            // 找到占位符现在的位置，确定新顺序
+            const allCards = [...grid.querySelectorAll('.currency-card:not(.dragging):not(.drag-placeholder-el)')];
+            const placeholderIdx = [...grid.children].indexOf(placeholder);
+            const before = [...grid.children].slice(0, placeholderIdx)
+                .filter(el => el.dataset.currency && !el.classList.contains('dragging'));
+            const newIdx = before.length;
+
+            placeholder.remove();
             ghost.remove();
             card.classList.remove('dragging');
-            document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+            card.style.transition = '';
+            card.style.transform  = '';
 
             card.removeEventListener('pointermove', onDragMove);
             card.removeEventListener('pointerup',   onDragEnd);
@@ -1536,17 +1573,16 @@
 
             dragState = null;
 
-            if (overCard && overCard.dataset.currency !== currency) {
-                const from = currencyOrder.indexOf(currency);
-                const to   = currencyOrder.indexOf(overCard.dataset.currency);
-                if (from !== -1 && to !== -1) {
-                    currencyOrder.splice(from, 1);
-                    currencyOrder.splice(to, 0, currency);
-                    localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
-                    if (window.saveToCloud) saveToCloud();
-                    updateConversion();
-                }
-            }
+            // 提交新顺序
+            const from = currencyOrder.indexOf(currency);
+            const visibleOrder = allCards.map(c => c.dataset.currency);
+            visibleOrder.splice(newIdx, 0, currency);
+            const notVisible = currencyOrder.filter(c => !visibleOrder.includes(c));
+            currencyOrder.length = 0;
+            currencyOrder.push(...visibleOrder, ...notVisible);
+            localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+            if (window.saveToCloud) saveToCloud();
+            updateConversion();
         }
 
         function switchToConvertedCurrency(currency, value) {
