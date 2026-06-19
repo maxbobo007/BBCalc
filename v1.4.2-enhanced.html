@@ -807,6 +807,25 @@
                 <button class="close-btn" onclick="closeSettings()">×</button>
             </div>
 
+            <div class="section-title">账号同步</div>
+            <div id="authSection" style="margin-bottom:20px;">
+                <div id="authSignedOut" style="display:flex;align-items:center;gap:12px;">
+                    <button id="googleSignInBtn" onclick="signInWithGoogle()" style="display:flex;align-items:center;gap:10px;background:var(--surface-c);border:1.5px solid var(--outline-v);border-radius:12px;padding:10px 18px;color:var(--on-surface);font-size:14px;font-weight:500;cursor:pointer;transition:background 0.2s;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18">
+                        使用 Google 账号登录
+                    </button>
+                    <span style="color:var(--on-sv);font-size:12px;">登录后配置自动同步到云端</span>
+                </div>
+                <div id="authSignedIn" style="display:none;align-items:center;gap:12px;">
+                    <img id="userAvatar" src="" width="32" height="32" style="border-radius:50%;">
+                    <div>
+                        <div id="userName" style="font-size:14px;font-weight:600;color:var(--on-surface);"></div>
+                        <div id="userEmail" style="font-size:12px;color:var(--on-sv);"></div>
+                    </div>
+                    <button onclick="signOutUser()" style="margin-left:auto;background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">退出登录</button>
+                </div>
+            </div>
+
             <div class="section-title">主题外观</div>
             <div class="theme-selector" id="themeSelector">
                 <button class="theme-btn" data-mode="light" onclick="setTheme('light')">☀️ 浅色</button>
@@ -878,6 +897,7 @@
             themeMode = mode;
             localStorage.setItem('themeMode', mode);
             applyTheme(mode);
+            if (window.saveToCloud) saveToCloud();
         }
 
         applyTheme(themeMode);
@@ -907,6 +927,7 @@
         function setLanguage(lang) {
             currentLang = lang;
             localStorage.setItem('appLanguage', lang);
+            if (window.saveToCloud) saveToCloud();
             document.querySelector('.title').childNodes[0].textContent = t('calc') + ' ';
             document.querySelector('.currency-selector label').textContent = t('base');
             document.querySelector('.conversion-title').textContent = t('conversion');
@@ -1443,6 +1464,7 @@
 
                 // 保存到 localStorage
                 localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+                if (window.saveToCloud) saveToCloud();
 
                 // 重新渲染
                 updateConversion();
@@ -1475,6 +1497,7 @@
                 currencyOrder.push(oldBase);
             }
             localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+            if (window.saveToCloud) saveToCloud();
 
             // 切换基准货币
             document.getElementById('baseCurrency').value = currency;
@@ -1501,6 +1524,7 @@
                 pinnedCurrencies.add(currency);
             }
             localStorage.setItem('pinnedCurrencies', JSON.stringify([...pinnedCurrencies]));
+            if (window.saveToCloud) saveToCloud();
             updateConversion();
             // 弹跳动画（重新渲染后找到对应按钮）
             setTimeout(() => {
@@ -1563,6 +1587,7 @@
         function setDefaultCurrency(currency) {
             defaultBaseCurrency = currency;
             localStorage.setItem('defaultBaseCurrency', currency);
+            if (window.saveToCloud) saveToCloud();
             document.getElementById('baseCurrency').value = currency;
             activeCurrency = currency;
             document.getElementById('activeCurrencyBadge').textContent = currency;
@@ -1692,6 +1717,7 @@
             }
 
             localStorage.setItem('displayCurrencies', JSON.stringify(displayCurrencies));
+            if (window.saveToCloud) saveToCloud();
             updateConversion();
             // 重新渲染设置以更新置顶
             renderSettings();
@@ -1762,13 +1788,95 @@
             badge.addEventListener('animationend', () => badge.classList.remove('swapping'), { once: true });
         }
 
-        // 显示当前配置信息
         console.log('=== 波波汇率计算器 BBCalc v1.4.0 ===');
-        console.log('默认货币:', defaultBaseCurrency);
-        console.log('当前语言:', currentLang);
-        console.log('启用的API:', preferredAPIs.map(key => availableAPIs[key]?.name || key).join(', '));
-        console.log('显示的货币数量:', displayCurrencies.length);
-        console.log('====================================');
+    </script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc }
+            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDW1uBBGZsD1pTEa2wjdEYvXRusDSvu-Qg",
+            authDomain: "bbcalc-ad997.firebaseapp.com",
+            projectId: "bbcalc-ad997",
+            storageBucket: "bbcalc-ad997.firebasestorage.app",
+            messagingSenderId: "751427436528",
+            appId: "1:751427436528:web:a0e646eb6bfe10badd2735"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        let syncTimeout = null;
+
+        // 读取云端配置并应用
+        async function loadFromCloud(uid) {
+            try {
+                const snap = await getDoc(doc(db, 'users', uid, 'config', 'settings'));
+                if (!snap.exists()) return;
+                const data = snap.data();
+                if (data.currencyOrder)    { window.currencyOrder = data.currencyOrder; localStorage.setItem('currencyOrder', JSON.stringify(data.currencyOrder)); }
+                if (data.pinnedCurrencies) { window.pinnedCurrencies = new Set(data.pinnedCurrencies); localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies)); }
+                if (data.displayCurrencies){ window.displayCurrencies = data.displayCurrencies; localStorage.setItem('selectedCurrencies', JSON.stringify(data.displayCurrencies)); }
+                if (data.themeMode)        { window.themeMode = data.themeMode; localStorage.setItem('themeMode', data.themeMode); applyTheme(data.themeMode); }
+                if (data.appLanguage)      { localStorage.setItem('appLanguage', data.appLanguage); setLanguage(data.appLanguage); }
+                if (data.defaultCurrency)  { localStorage.setItem('defaultBaseCurrency', data.defaultCurrency); }
+                updateConversion();
+            } catch(e) { console.warn('云端读取失败', e); }
+        }
+
+        // 保存到云端（防抖 2 秒）
+        window.saveToCloud = function() {
+            if (!currentUser) return;
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(async () => {
+                try {
+                    await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
+                        currencyOrder:    window.currencyOrder || [],
+                        pinnedCurrencies: [...(window.pinnedCurrencies || [])],
+                        displayCurrencies:window.displayCurrencies || [],
+                        themeMode:        window.themeMode || 'auto',
+                        appLanguage:      localStorage.getItem('appLanguage') || 'zh',
+                        defaultCurrency:  localStorage.getItem('defaultBaseCurrency') || 'CNY',
+                        updatedAt:        Date.now()
+                    });
+                } catch(e) { console.warn('云端保存失败', e); }
+            }, 2000);
+        };
+
+        // 登录状态变化
+        onAuthStateChanged(auth, async user => {
+            currentUser = user;
+            const signedOut = document.getElementById('authSignedOut');
+            const signedIn  = document.getElementById('authSignedIn');
+            if (user) {
+                signedOut.style.display = 'none';
+                signedIn.style.display  = 'flex';
+                document.getElementById('userAvatar').src = user.photoURL || '';
+                document.getElementById('userName').textContent = user.displayName || '';
+                document.getElementById('userEmail').textContent = user.email || '';
+                await loadFromCloud(user.uid);
+            } else {
+                signedOut.style.display = 'flex';
+                signedIn.style.display  = 'none';
+            }
+        });
+
+        window.signInWithGoogle = async function() {
+            try { await signInWithPopup(auth, provider); }
+            catch(e) { console.error('登录失败', e); }
+        };
+
+        window.signOutUser = async function() {
+            await signOut(auth);
+        };
     </script>
 </body>
 </html>
