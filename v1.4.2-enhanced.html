@@ -655,6 +655,107 @@
             }
         }
     </style>
+    <style>
+        /* ── Material Design / Google 风格增强 ── */
+
+        body {
+            background: linear-gradient(145deg, #0c0c18 0%, #080810 100%);
+        }
+
+        /* 面板增强阴影 */
+        .calculator-panel, .conversion-panel {
+            box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.05) inset;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* 水波纹 Ripple */
+        .calc-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .md-ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: md-ripple-anim 0.55s linear;
+            pointer-events: none;
+            background: rgba(255,255,255,0.22);
+        }
+
+        @keyframes md-ripple-anim {
+            to { transform: scale(5); opacity: 0; }
+        }
+
+        /* 按钮 hover 辉光 */
+        .calc-button:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+        .calc-button.operator:hover { box-shadow: 0 4px 14px rgba(255,159,10,0.3); }
+        .calc-button.equals:hover  { box-shadow: 0 4px 14px rgba(10,132,255,0.4); }
+        .calc-button.backspace:hover { box-shadow: 0 4px 14px rgba(255,59,48,0.4); }
+
+        /* 货币卡片入场动画 */
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(14px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+
+        .currency-card {
+            animation: cardEnter 0.28s cubic-bezier(0.2,0,0,1) both;
+            backdrop-filter: blur(8px);
+        }
+
+        /* 汇率数值更新动画 */
+        @keyframes valueSlideIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0);   }
+        }
+
+        .currency-value {
+            animation: valueSlideIn 0.2s ease both;
+        }
+
+        /* 设置面板滑入 */
+        @keyframes panelSlideUp {
+            from { opacity: 0; transform: translateY(28px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        }
+
+        .settings-overlay.active .settings-panel {
+            animation: panelSlideUp 0.3s cubic-bezier(0.2,0,0,1);
+        }
+
+        /* 置顶按钮弹跳 */
+        @keyframes pinBounce {
+            0%   { transform: scale(1) rotate(0deg); }
+            40%  { transform: scale(1.5) rotate(-20deg); }
+            70%  { transform: scale(0.9) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .pin-btn.bouncing {
+            animation: pinBounce 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        /* 基准货币 badge 切换动画 */
+        @keyframes badgeSwap {
+            0%   { opacity: 0; transform: translateY(-6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-currency-badge.swapping {
+            animation: badgeSwap 0.25s ease;
+        }
+
+        /* 结果数字切换动画 */
+        @keyframes resultFade {
+            from { opacity: 0.4; transform: scale(0.97); }
+            to   { opacity: 1;   transform: scale(1);    }
+        }
+
+        .result.switching {
+            animation: resultFade 0.2s ease;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -1196,10 +1297,13 @@
             const baseCurrency = document.getElementById('baseCurrency').value;
             const grid = document.getElementById('conversionGrid');
             grid.innerHTML = '';
+            _cardIndex = 0;
 
             const filtered = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
             const pinnedList = filtered.filter(c => pinnedCurrencies.has(c));
             const unpinnedList = filtered.filter(c => !pinnedCurrencies.has(c));
+
+            let _cardIndex = 0;
 
             function createCard(currency, value) {
                 const isPinned = pinnedCurrencies.has(currency);
@@ -1210,6 +1314,8 @@
                 card.setAttribute('draggable', 'true');
                 card.dataset.currency = currency;
                 card.onclick = () => switchToConvertedCurrency(currency, value);
+                card.style.animationDelay = `${_cardIndex * 28}ms`;
+                _cardIndex++;
 
                 const displayVal = value !== null
                     ? value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -1221,7 +1327,7 @@
                         <div class="currency-name">${getCurrencyName(currency)}</div>
                     </div>
                     <div class="currency-card-right">
-                        <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="togglePin('${currency}', event)" title="${isPinned ? '取消置顶' : '置顶'}">📌</button>
+                        <button class="pin-btn ${isPinned ? 'pinned' : ''}" data-currency="${currency}" onclick="togglePin('${currency}', event)" title="${isPinned ? '取消置顶' : '置顶'}">📌</button>
                         <div class="currency-value">${displayVal}</div>
                     </div>
                 `;
@@ -1350,6 +1456,7 @@
             document.getElementById('baseCurrency').value = currency;
             activeCurrency = currency;
             document.getElementById('activeCurrencyBadge').textContent = currency;
+            animateBadge();
 
             // 如果有计算结果，更新显示值为换算后的金额
             if (value !== 0) {
@@ -1371,6 +1478,16 @@
             }
             localStorage.setItem('pinnedCurrencies', JSON.stringify([...pinnedCurrencies]));
             updateConversion();
+            // 弹跳动画（重新渲染后找到对应按钮）
+            setTimeout(() => {
+                const btn = document.querySelector(`.pin-btn[data-currency="${currency}"]`);
+                if (btn) {
+                    btn.classList.remove('bouncing');
+                    void btn.offsetWidth;
+                    btn.classList.add('bouncing');
+                    btn.addEventListener('animationend', () => btn.classList.remove('bouncing'), { once: true });
+                }
+            }, 0);
         }
 
         // 搜索过滤
@@ -1593,6 +1710,31 @@
         setLanguage(currentLang);
         updateConversion();
         fetchRates();
+
+        // ── Material 水波纹 Ripple ──
+        function attachRipple(btn) {
+            btn.addEventListener('click', function(e) {
+                const existing = btn.querySelector('.md-ripple');
+                if (existing) existing.remove();
+                const circle = document.createElement('span');
+                const d = Math.max(btn.clientWidth, btn.clientHeight);
+                const rect = btn.getBoundingClientRect();
+                circle.className = 'md-ripple';
+                circle.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - rect.left - d/2}px;top:${e.clientY - rect.top - d/2}px`;
+                btn.appendChild(circle);
+                circle.addEventListener('animationend', () => circle.remove());
+            });
+        }
+        document.querySelectorAll('.calc-button').forEach(attachRipple);
+
+        // badge 切换动画
+        function animateBadge() {
+            const badge = document.getElementById('activeCurrencyBadge');
+            badge.classList.remove('swapping');
+            void badge.offsetWidth;
+            badge.classList.add('swapping');
+            badge.addEventListener('animationend', () => badge.classList.remove('swapping'), { once: true });
+        }
 
         // 显示当前配置信息
         console.log('=== 波波汇率计算器 BBCalc v1.4.0 ===');
