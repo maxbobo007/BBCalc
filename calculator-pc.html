@@ -1645,24 +1645,61 @@
 
         function togglePin(currency, event) {
             event.stopPropagation();
-            if (pinnedCurrencies.has(currency)) {
-                pinnedCurrencies.delete(currency);
-            } else {
-                pinnedCurrencies.add(currency);
-            }
+            const wasPinned = pinnedCurrencies.has(currency);
+            if (wasPinned) pinnedCurrencies.delete(currency);
+            else pinnedCurrencies.add(currency);
             localStorage.setItem('pinnedCurrencies', JSON.stringify([...pinnedCurrencies]));
             if (window.saveToCloud) saveToCloud();
-            updateConversion();
-            // 弹跳动画（重新渲染后找到对应按钮）
-            setTimeout(() => {
-                const btn = document.querySelector(`.pin-btn[data-currency="${currency}"]`);
-                if (btn) {
-                    btn.classList.remove('bouncing');
-                    void btn.offsetWidth;
-                    btn.classList.add('bouncing');
-                    btn.addEventListener('animationend', () => btn.classList.remove('bouncing'), { once: true });
+
+            const grid = document.getElementById('conversionGrid');
+            const card = grid.querySelector(`.currency-card[data-currency="${currency}"]`);
+            if (!card) { updateConversion(); return; }
+
+            // 只更新这一张卡的样式，不重建整个列表
+            card.classList.toggle('pinned-card', !wasPinned);
+            const btn = card.querySelector('.pin-btn');
+            if (btn) {
+                btn.classList.toggle('pinned', !wasPinned);
+                btn.title = wasPinned ? '置顶' : '取消置顶';
+            }
+
+            // 用 FLIP 把卡片移到正确区域
+            flipCards(grid, () => {
+                const divider = grid.querySelector('.pinned-divider');
+                if (wasPinned) {
+                    // 取消置顶：移到分割线后面（普通区开头）
+                    if (divider) grid.insertBefore(card, divider.nextSibling);
+                } else {
+                    // 置顶：移到分割线前面（置顶区末尾）
+                    if (divider) grid.insertBefore(card, divider);
+                    else grid.insertBefore(card, grid.firstChild);
                 }
-            }, 0);
+                // 同步分割线：有置顶且有普通卡时才显示
+                const cards = [...grid.querySelectorAll('.currency-card')];
+                const hasPinned   = cards.some(c => pinnedCurrencies.has(c.dataset.currency));
+                const hasUnpinned = cards.some(c => !pinnedCurrencies.has(c.dataset.currency));
+                let existingDivider = grid.querySelector('.pinned-divider');
+                if (hasPinned && hasUnpinned) {
+                    if (!existingDivider) {
+                        const firstUnpinned = cards.find(c => !pinnedCurrencies.has(c.dataset.currency));
+                        if (firstUnpinned) {
+                            existingDivider = document.createElement('div');
+                            existingDivider.className = 'pinned-divider';
+                            grid.insertBefore(existingDivider, firstUnpinned);
+                        }
+                    }
+                } else if (existingDivider) {
+                    existingDivider.remove();
+                }
+            });
+
+            // 弹跳动画
+            if (btn) {
+                btn.classList.remove('bouncing');
+                void btn.offsetWidth;
+                btn.classList.add('bouncing');
+                btn.addEventListener('animationend', () => btn.classList.remove('bouncing'), { once: true });
+            }
         }
 
         // 搜索过滤
