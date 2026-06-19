@@ -5,13 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>波波汇率计算器 v1.4.0 - BBCalc</title>
     <style>
+        /* ── 主题变量 ── */
+        :root {
+            --bg:          #0e0d12;
+            --surface:     #1c1b1f;
+            --surface-c:   #2b2930;
+            --surface-ch:  #36343b;
+            --on-surface:  #e6e1e5;
+            --on-sv:       #938f99;
+            --outline:     rgba(202,196,208,0.08);
+            --outline-v:   rgba(202,196,208,0.13);
+            --primary:     #4285f4;
+            --primary-c:   rgba(66,133,244,0.18);
+            --on-pc:       #a8c7fa;
+            --err-c:       rgba(255,100,80,0.15);
+            --on-err:      #ffb4ab;
+            --scroll:      rgba(202,196,208,0.18);
+            color-scheme:  dark;
+        }
+
+        [data-theme="light"] {
+            --bg:          #f3f3fa;
+            --surface:     #ffffff;
+            --surface-c:   #ededf4;
+            --surface-ch:  #e2e1e8;
+            --on-surface:  #1c1b1f;
+            --on-sv:       #49454f;
+            --outline:     rgba(73,69,79,0.09);
+            --outline-v:   rgba(73,69,79,0.14);
+            --primary:     #1a73e8;
+            --primary-c:   rgba(26,115,232,0.1);
+            --on-pc:       #1a4fa0;
+            --err-c:       rgba(200,40,20,0.1);
+            --on-err:      #b3261e;
+            --scroll:      rgba(73,69,79,0.2);
+            color-scheme:  light;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-            background: #0e0d12;
+            background: var(--bg);
             min-height: 100vh;
-            color: #e6e1e5;
+            color: var(--on-surface);
             padding: 32px;
         }
 
@@ -25,13 +62,13 @@
         }
 
         .calculator-panel {
-            background: #1c1b1f;
+            background: var(--surface);
             border-radius: 28px;
             padding: 28px;
             display: flex;
             flex-direction: column;
             gap: 14px;
-            border: 1px solid rgba(202,196,208,0.08);
+            border: 1px solid var(--outline);
         }
 
         .header {
@@ -46,13 +83,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #e6e1e5;
+            color: var(--on-surface);
             letter-spacing: -0.3px;
         }
 
         .active-currency-badge {
-            background: rgba(168,199,250,0.15);
-            color: #a8c7fa;
+            background: var(--primary-c);
+            color: var(--on-pc);
             padding: 4px 14px;
             border-radius: 50px;
             font-size: 13px;
@@ -61,8 +98,8 @@
         }
 
         .settings-btn {
-            background: #2b2930;
-            border: 1px solid rgba(202,196,208,0.1);
+            background: var(--surface-c);
+            border: 1px solid var(--outline-v);
             border-radius: 50px;
             width: 42px;
             height: 42px;
@@ -70,29 +107,29 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: #cac4d0;
+            color: var(--on-sv);
             font-size: 17px;
             transition: all 0.25s cubic-bezier(0.2,0,0,1);
         }
 
         .settings-btn:hover {
-            background: #36343b;
+            background: var(--surface-ch);
             transform: rotate(45deg);
         }
 
         .currency-selector {
-            background: #2b2930;
+            background: var(--surface-c);
             border-radius: 14px;
             padding: 11px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 1px solid rgba(202,196,208,0.07);
+            border: 1px solid var(--outline);
         }
 
         .currency-selector label {
             font-size: 12px;
-            color: #938f99;
+            color: var(--on-sv);
             font-weight: 500;
             letter-spacing: 0.4px;
             text-transform: uppercase;
@@ -101,7 +138,7 @@
         .currency-selector select {
             background: transparent;
             border: none;
-            color: #a8c7fa;
+            color: var(--on-pc);
             font-size: 15px;
             font-weight: 600;
             padding: 4px 8px;
@@ -110,12 +147,12 @@
         }
 
         .currency-selector select option {
-            background: #2b2930;
-            color: #e6e1e5;
+            background: var(--surface-c);
+            color: var(--on-surface);
         }
 
         .display {
-            background: #2b2930;
+            background: var(--surface-c);
             border-radius: 20px;
             padding: 22px 26px;
             min-height: 120px;
@@ -123,11 +160,11 @@
             flex-direction: column;
             justify-content: flex-end;
             position: relative;
-            border: 1px solid rgba(202,196,208,0.06);
+            border: 1px solid var(--outline);
         }
 
         .expression {
-            color: #938f99;
+            color: var(--on-sv);
             font-size: 15px;
             margin-bottom: 6px;
             min-height: 18px;
@@ -138,7 +175,7 @@
         .result {
             font-size: 50px;
             font-weight: 300;
-            color: #e6e1e5;
+            color: var(--on-surface);
             text-align: right;
             line-height: 1.1;
             letter-spacing: -1.5px;
@@ -157,7 +194,7 @@
             display: inline-block;
             width: 2px;
             height: 42px;
-            background: #a8c7fa;
+            background: var(--on-pc);
             margin-left: 4px;
             animation: blink 1s infinite;
             vertical-align: middle;
@@ -177,14 +214,14 @@
         }
 
         .calc-button {
-            background: #2b2930;
+            background: var(--surface-c);
             border: none;
             border-radius: 20px;
             font-size: 24px;
             font-weight: 400;
             cursor: pointer;
             transition: background 0.12s ease, transform 0.08s ease;
-            color: #e6e1e5;
+            color: var(--on-surface);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -194,51 +231,51 @@
             overflow: hidden;
         }
 
-        .calc-button:hover { background: #36343b; }
+        .calc-button:hover { background: var(--surface-ch); }
         .calc-button:active { transform: scale(0.95); }
 
         .calc-button.function {
-            background: #302e35;
-            color: #cac4d0;
+            background: var(--surface-ch);
+            color: var(--on-sv);
             font-size: 20px;
             font-weight: 500;
         }
 
-        .calc-button.function:hover { background: #3a3840; }
+        .calc-button.function:hover { background: var(--surface-ch); }
 
         .calc-button.operator {
-            background: rgba(66,133,244,0.18);
-            color: #a8c7fa;
+            background: var(--primary-c);
+            color: var(--on-pc);
             font-size: 26px;
         }
 
-        .calc-button.operator:hover { background: rgba(66,133,244,0.28); }
+        .calc-button.operator:hover { background: var(--primary-c); filter: brightness(1.2); }
 
         .calc-button.equals {
-            background: #4285f4;
+            background: var(--primary);
             color: white;
         }
 
-        .calc-button.equals:hover { background: #5a95f5; }
+        .calc-button.equals:hover { filter: brightness(1.1); }
 
         .calc-button.zero { grid-column: span 2; }
 
         .calc-button.backspace {
-            background: rgba(255,100,80,0.15);
-            color: #ffb4ab;
+            background: var(--err-c);
+            color: var(--on-err);
             font-size: 20px;
         }
 
-        .calc-button.backspace:hover { background: rgba(255,100,80,0.25); }
+        .calc-button.backspace:hover { background: var(--err-c); filter: brightness(1.3); }
 
         .conversion-panel {
-            background: #1c1b1f;
+            background: var(--surface);
             border-radius: 28px;
             padding: 28px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid rgba(202,196,208,0.08);
+            border: 1px solid var(--outline);
         }
 
         .conversion-header {
@@ -247,29 +284,29 @@
             align-items: center;
             margin-bottom: 18px;
             padding-bottom: 16px;
-            border-bottom: 1px solid rgba(202,196,208,0.08);
+            border-bottom: 1px solid var(--outline);
         }
 
         .conversion-title {
             font-size: 18px;
             font-weight: 600;
-            color: #e6e1e5;
+            color: var(--on-surface);
         }
 
         .search-box {
-            background: #2b2930;
-            border: 1px solid rgba(202,196,208,0.12);
+            background: var(--surface-c);
+            border: 1px solid var(--outline-v);
             border-radius: 50px;
             padding: 9px 18px;
-            color: #e6e1e5;
+            color: var(--on-surface);
             font-size: 13px;
             width: 210px;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        .search-box:focus { border-color: #4285f4; }
-        .search-box::placeholder { color: #938f99; }
+        .search-box:focus { border-color: var(--primary); }
+        .search-box::placeholder { color: var(--on-sv); }
 
         .conversion-grid {
             display: grid;
@@ -282,17 +319,17 @@
         .conversion-grid::-webkit-scrollbar { width: 4px; }
         .conversion-grid::-webkit-scrollbar-track { background: transparent; }
         .conversion-grid::-webkit-scrollbar-thumb {
-            background: rgba(202,196,208,0.18);
+            background: var(--scroll);
             border-radius: 10px;
         }
 
         .currency-card {
-            background: #2b2930;
+            background: var(--surface-c);
             border-radius: 16px;
             padding: 13px 16px;
             cursor: pointer;
             transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
-            border: 1px solid rgba(202,196,208,0.07);
+            border: 1px solid var(--outline);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -306,22 +343,22 @@
         }
 
         .currency-card.drag-over {
-            border-color: #4285f4;
-            background: rgba(66,133,244,0.1);
+            border-color: var(--primary);
+            background: var(--primary-c);
             transform: scale(1.02);
         }
 
         .currency-card:hover {
-            background: #322f37;
-            border-color: rgba(202,196,208,0.14);
+            background: var(--surface-ch);
+            border-color: var(--outline-v);
             transform: translateY(-1px);
         }
 
         .currency-card:active { transform: translateY(0); cursor: grabbing; }
 
         .currency-card.pinned-card {
-            border-color: rgba(66,133,244,0.35);
-            background: rgba(66,133,244,0.07);
+            border-color: var(--primary);
+            background: var(--primary-c);
         }
 
         .currency-card-right {
@@ -349,13 +386,13 @@
         .pinned-divider {
             grid-column: 1 / -1;
             height: 1px;
-            background: rgba(202,196,208,0.08);
+            background: var(--outline);
             margin: 2px 0;
         }
 
         .currency-card.active {
-            border-color: #4285f4;
-            background: rgba(66,133,244,0.1);
+            border-color: var(--primary);
+            background: var(--primary-c);
         }
 
         .currency-info { display: flex; flex-direction: column; gap: 2px; }
@@ -363,18 +400,18 @@
         .currency-code {
             font-size: 17px;
             font-weight: 600;
-            color: #e6e1e5;
+            color: var(--on-surface);
         }
 
         .currency-name {
             font-size: 11px;
-            color: #938f99;
+            color: var(--on-sv);
         }
 
         .currency-value {
             font-size: 20px;
             font-weight: 600;
-            color: #a8c7fa;
+            color: var(--on-pc);
             text-align: right;
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.5px;
@@ -384,15 +421,15 @@
             margin-top: auto;
             padding-top: 14px;
             text-align: center;
-            color: #938f99;
+            color: var(--on-sv);
             font-size: 11px;
             line-height: 1.7;
         }
 
         .update-btn {
             background: none;
-            border: 1px solid rgba(168,199,250,0.28);
-            color: #a8c7fa;
+            border: 1px solid var(--primary-c);
+            color: var(--on-pc);
             cursor: pointer;
             font-size: 11px;
             margin-top: 7px;
@@ -402,14 +439,14 @@
         }
 
         .update-btn:hover {
-            background: rgba(168,199,250,0.1);
-            border-color: rgba(168,199,250,0.5);
+            background: var(--primary-c);
+            border-color: var(--on-pc);
         }
 
         .settings-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.72);
+            background: rgba(0,0,0,0.65);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -420,9 +457,9 @@
         .settings-overlay.active { display: flex; }
 
         .settings-panel {
-            background: #1c1b1f;
+            background: var(--surface);
             border-radius: 28px;
-            border: 1px solid rgba(202,196,208,0.1);
+            border: 1px solid var(--outline-v);
             width: 90%;
             max-width: 880px;
             max-height: 80vh;
@@ -436,17 +473,17 @@
             align-items: center;
             margin-bottom: 28px;
             padding-bottom: 18px;
-            border-bottom: 1px solid rgba(202,196,208,0.08);
+            border-bottom: 1px solid var(--outline);
         }
 
         .settings-title {
             font-size: 26px;
             font-weight: 600;
-            color: #e6e1e5;
+            color: var(--on-surface);
         }
 
         .close-btn {
-            background: #2b2930;
+            background: var(--surface-c);
             border: none;
             border-radius: 50px;
             width: 42px;
@@ -455,16 +492,16 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: #cac4d0;
+            color: var(--on-sv);
             font-size: 20px;
             transition: background 0.2s;
         }
 
-        .close-btn:hover { background: #36343b; }
+        .close-btn:hover { background: var(--surface-ch); }
 
         .section-title {
             font-size: 11px;
-            color: #938f99;
+            color: var(--on-sv);
             text-transform: uppercase;
             letter-spacing: 1.2px;
             margin: 26px 0 12px;
@@ -478,29 +515,29 @@
         }
 
         .currency-item {
-            background: #2b2930;
+            background: var(--surface-c);
             border-radius: 14px;
             padding: 13px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: background 0.15s;
-            border: 1px solid rgba(202,196,208,0.06);
+            border: 1px solid var(--outline);
         }
 
-        .currency-item:hover { background: #322f37; }
+        .currency-item:hover { background: var(--surface-ch); }
 
         .currency-item-info { display: flex; flex-direction: column; }
 
         .currency-item-code {
             font-size: 14px;
             font-weight: 600;
-            color: #e6e1e5;
+            color: var(--on-surface);
         }
 
         .currency-item-name {
             font-size: 11px;
-            color: #938f99;
+            color: var(--on-sv);
         }
 
         .toggle-switch {
@@ -515,7 +552,7 @@
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #49454f;
+            background-color: var(--surface-ch);
             transition: 0.25s;
             border-radius: 26px;
         }
@@ -527,12 +564,12 @@
             width: 20px;
             left: 3px;
             bottom: 3px;
-            background-color: #cac4d0;
+            background-color: var(--on-sv);
             transition: 0.25s;
             border-radius: 50%;
         }
 
-        input:checked + .toggle-slider { background-color: #4285f4; }
+        input:checked + .toggle-slider { background-color: var(--primary); }
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
             background-color: white;
@@ -657,6 +694,29 @@
         .result.switching {
             animation: resultFade 0.2s ease;
         }
+
+        .theme-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .theme-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border-radius: 12px;
+            border: 1.5px solid var(--outline-v);
+            background: var(--surface-c);
+            color: var(--on-sv);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .theme-btn.active {
+            background: var(--primary-c);
+            color: var(--on-pc);
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -741,8 +801,15 @@
                 <button class="close-btn" onclick="closeSettings()">×</button>
             </div>
 
+            <div class="section-title">主题外观</div>
+            <div class="theme-selector" id="themeSelector">
+                <button class="theme-btn" data-mode="light" onclick="setTheme('light')">☀️ 浅色</button>
+                <button class="theme-btn" data-mode="auto" onclick="setTheme('auto')">💻 跟随设备</button>
+                <button class="theme-btn" data-mode="dark" onclick="setTheme('dark')">🌙 深色</button>
+            </div>
+
             <div class="section-title">语言设置</div>
-            <select onchange="setLanguage(this.value)" id="langSelect" style="background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px; color: white; font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
+            <select onchange="setLanguage(this.value)" id="langSelect" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
                 <option value="zh">中文 Chinese</option>
                 <option value="en">English</option>
                 <option value="es">Español</option>
@@ -752,7 +819,7 @@
             </select>
 
             <div class="section-title">默认基准货币</div>
-            <select onchange="setDefaultCurrency(this.value)" id="defaultCurrencySelect" style="background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px; color: white; font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
+            <select onchange="setDefaultCurrency(this.value)" id="defaultCurrencySelect" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
                 <!-- 动态生成所有货币选项 -->
             </select>
 
@@ -763,7 +830,7 @@
             <div class="currency-grid-settings" id="apiGridSettings"></div>
 
             <div class="section-title">选择要显示的货币</div>
-            <input type="text" id="currencySearchBox" placeholder="🔍 搜索货币..." onkeyup="filterCurrenciesInSettings()" style="background: rgba(44, 44, 46, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px; color: white; font-size: 15px; width: 100%; margin-bottom: 12px; outline: none;">
+            <input type="text" id="currencySearchBox" placeholder="🔍 搜索货币..." onkeyup="filterCurrenciesInSettings()" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; width: 100%; margin-bottom: 12px; outline: none;">
             <div class="currency-grid-settings" id="currencyGridSettings"></div>
         </div>
     </div>
@@ -776,6 +843,7 @@
         let activeCurrency = 'CNY';
         let rateSource = '内置数据'; // 汇率来源
         let currentLang = localStorage.getItem('appLanguage') || 'zh';
+        let themeMode = localStorage.getItem('themeMode') || 'auto';
         let showCursor = true;
         let cursorInterval;
         
@@ -790,6 +858,26 @@
         };
         
         function t(key) { return i18n[currentLang][key] || i18n.zh[key]; }
+
+        function applyTheme(mode) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+        }
+
+        function setTheme(mode) {
+            themeMode = mode;
+            localStorage.setItem('themeMode', mode);
+            applyTheme(mode);
+        }
+
+        applyTheme(themeMode);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (themeMode === 'auto') applyTheme('auto');
+        });
 
         // 动态填充基准货币下拉框
         function populateBaseCurrencySelect() {
@@ -1410,6 +1498,7 @@
 
         // 设置功能
         function openSettings() {
+            applyTheme(themeMode);
             // 验证并修复配置
             const oldLength = preferredAPIs.length;
             preferredAPIs = preferredAPIs.filter(key => availableAPIs[key]);
