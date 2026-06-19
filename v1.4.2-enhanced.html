@@ -337,15 +337,27 @@
         }
 
         .currency-card.dragging {
-            opacity: 0.35;
-            cursor: grabbing;
-            transform: scale(0.95) rotate(1deg);
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .currency-card.drag-over {
-            border-color: var(--primary);
+        .currency-card.drag-ghost {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+            transform: scale(1.04) rotate(1.5deg);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            opacity: 0.96;
+            width: var(--ghost-w);
+        }
+
+        .currency-card.drag-placeholder {
+            border: 2px dashed var(--primary);
             background: var(--primary-c);
-            transform: scale(1.02);
+            opacity: 0.5;
+            transform: scale(0.97);
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
         .currency-card:hover {
@@ -1384,7 +1396,7 @@
                 card.className = 'currency-card'
                     + (currency === activeCurrency ? ' active' : '')
                     + (isPinned ? ' pinned-card' : '');
-                card.setAttribute('draggable', 'true');
+                card.style.cursor = 'grab';
                 card.dataset.currency = currency;
                 card.onclick = () => switchToConvertedCurrency(currency, value !== null ? value : 0);
                 card.style.animationDelay = `${_cardIndex * 28}ms`;
@@ -1437,75 +1449,98 @@
         }
 
         // 拖拽功能
-        let draggedElement = null;
+        // ── 拖拽排序（pointer events，流畅跟手）──
+        let dragState = null;
 
         function addDragListeners(card) {
-            card.addEventListener('dragstart', handleDragStart);
-            card.addEventListener('dragover', handleDragOver);
-            card.addEventListener('drop', handleDrop);
-            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('pointerdown', onDragStart);
         }
 
-        function handleDragStart(e) {
-            draggedElement = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
+        function onDragStart(e) {
+            // 忽略 pin 按钮上的点击
+            if (e.target.closest('.pin-btn')) return;
+            // 只响应主键（左键/单指）
+            if (e.button !== undefined && e.button !== 0) return;
+
+            const card = e.currentTarget;
+            const rect = card.getBoundingClientRect();
+
+            // 创建跟手 ghost
+            const ghost = card.cloneNode(true);
+            ghost.classList.add('drag-ghost');
+            ghost.style.setProperty('--ghost-w', rect.width + 'px');
+            ghost.style.left = rect.left + 'px';
+            ghost.style.top  = rect.top  + 'px';
+            ghost.style.width = rect.width + 'px';
+            document.body.appendChild(ghost);
+
+            card.classList.add('dragging');
+
+            dragState = {
+                card,
+                ghost,
+                offsetX: e.clientX - rect.left,
+                offsetY: e.clientY - rect.top,
+                currency: card.dataset.currency,
+                placeholder: null,
+            };
+
+            card.setPointerCapture(e.pointerId);
+            card.addEventListener('pointermove', onDragMove);
+            card.addEventListener('pointerup',   onDragEnd);
+            card.addEventListener('pointercancel', onDragEnd);
         }
 
-        function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
+        function onDragMove(e) {
+            if (!dragState) return;
+            const { ghost, offsetX, offsetY } = dragState;
+
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+            ghost.style.left = x + 'px';
+            ghost.style.top  = y + 'px';
+
+            // 找到当前鼠标下方的卡片
+            ghost.style.display = 'none';
+            const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.currency-card');
+            ghost.style.display = '';
+
+            // 清除旧 placeholder 高亮
+            document.querySelectorAll('.drag-placeholder').forEach(c => c.classList.remove('drag-placeholder'));
+
+            if (target && target !== dragState.card) {
+                target.classList.add('drag-placeholder');
+                dragState.overCard = target;
+            } else {
+                dragState.overCard = null;
             }
-            e.dataTransfer.dropEffect = 'move';
+        }
 
-            // 移除所有其他元素的drag-over类
-            document.querySelectorAll('.currency-card').forEach(card => {
-                if (card !== this) {
-                    card.classList.remove('drag-over');
+        function onDragEnd(e) {
+            if (!dragState) return;
+            const { card, ghost, currency, overCard } = dragState;
+
+            ghost.remove();
+            card.classList.remove('dragging');
+            document.querySelectorAll('.drag-placeholder').forEach(c => c.classList.remove('drag-placeholder'));
+
+            card.removeEventListener('pointermove', onDragMove);
+            card.removeEventListener('pointerup',   onDragEnd);
+            card.removeEventListener('pointercancel', onDragEnd);
+
+            dragState = null;
+
+            if (overCard && overCard.dataset.currency !== currency) {
+                const from = currencyOrder.indexOf(currency);
+                const to   = currencyOrder.indexOf(overCard.dataset.currency);
+                if (from !== -1 && to !== -1) {
+                    currencyOrder.splice(from, 1);
+                    currencyOrder.splice(to, 0, currency);
+                    localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+                    if (window.saveToCloud) saveToCloud();
+                    updateConversion();
                 }
-            });
-
-            if (this !== draggedElement) {
-                this.classList.add('drag-over');
             }
-            return false;
-        }
-
-        function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-
-            this.classList.remove('drag-over');
-
-            if (draggedElement !== this) {
-                const draggedCurrency = draggedElement.dataset.currency;
-                const targetCurrency = this.dataset.currency;
-
-                const draggedIndex = currencyOrder.indexOf(draggedCurrency);
-                const targetIndex = currencyOrder.indexOf(targetCurrency);
-
-                // 重新排序
-                currencyOrder.splice(draggedIndex, 1);
-                currencyOrder.splice(targetIndex, 0, draggedCurrency);
-
-                // 保存到 localStorage
-                localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
-                if (window.saveToCloud) saveToCloud();
-
-                // 重新渲染
-                updateConversion();
-            }
-
-            return false;
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            document.querySelectorAll('.currency-card').forEach(card => {
-                card.classList.remove('drag-over');
-            });
         }
 
         function switchToConvertedCurrency(currency, value) {
