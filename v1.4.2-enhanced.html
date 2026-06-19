@@ -345,19 +345,22 @@
             position: fixed;
             z-index: 9999;
             pointer-events: none;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-            transform: scale(1.04) rotate(1.5deg);
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            opacity: 0.96;
-            width: var(--ghost-w);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+            transform: scale(1.04) rotate(1deg);
+            opacity: 0.97;
+            will-change: transform;
+            transition: box-shadow 0.15s ease;
         }
 
-        .currency-card.drag-placeholder {
-            border: 2px dashed var(--primary);
-            background: var(--primary-c);
-            opacity: 0.5;
+        .currency-card.drag-over {
             transform: scale(0.97);
-            transition: transform 0.2s ease, opacity 0.2s ease;
+            background: var(--primary-c);
+            border-color: var(--primary);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .currency-card:not(.dragging):not(.drag-ghost) {
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
 
         .currency-card:hover {
@@ -1453,8 +1456,7 @@
             }
         }
 
-        // 拖拽功能
-        // ── 拖拽排序（pointer events，流畅跟手）──
+        // ── 拖拽排序（pointer events + rAF，GPU 加速）──
         let dragState = null;
 
         function addDragListeners(card) {
@@ -1462,32 +1464,27 @@
         }
 
         function onDragStart(e) {
-            // 忽略 pin 按钮上的点击
             if (e.target.closest('.pin-btn')) return;
-            // 只响应主键（左键/单指）
             if (e.button !== undefined && e.button !== 0) return;
 
             const card = e.currentTarget;
             const rect = card.getBoundingClientRect();
 
-            // 创建跟手 ghost
             const ghost = card.cloneNode(true);
             ghost.classList.add('drag-ghost');
-            ghost.style.setProperty('--ghost-w', rect.width + 'px');
-            ghost.style.left = rect.left + 'px';
-            ghost.style.top  = rect.top  + 'px';
-            ghost.style.width = rect.width + 'px';
+            ghost.style.width  = rect.width + 'px';
+            ghost.style.left   = rect.left  + 'px';
+            ghost.style.top    = rect.top   + 'px';
             document.body.appendChild(ghost);
-
             card.classList.add('dragging');
 
             dragState = {
-                card,
-                ghost,
+                card, ghost,
                 offsetX: e.clientX - rect.left,
                 offsetY: e.clientY - rect.top,
                 currency: card.dataset.currency,
-                placeholder: null,
+                overCard: null, rafId: null,
+                lastX: e.clientX, lastY: e.clientY,
             };
 
             card.setPointerCapture(e.pointerId);
@@ -1498,36 +1495,40 @@
 
         function onDragMove(e) {
             if (!dragState) return;
-            const { ghost, offsetX, offsetY } = dragState;
+            dragState.lastX = e.clientX;
+            dragState.lastY = e.clientY;
+            if (!dragState.rafId) dragState.rafId = requestAnimationFrame(rafDrag);
+        }
 
-            const x = e.clientX - offsetX;
-            const y = e.clientY - offsetY;
-            ghost.style.left = x + 'px';
-            ghost.style.top  = y + 'px';
+        function rafDrag() {
+            if (!dragState) return;
+            dragState.rafId = null;
+            const { ghost, offsetX, offsetY, card, lastX, lastY } = dragState;
 
-            // 找到当前鼠标下方的卡片
-            ghost.style.display = 'none';
-            const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.currency-card');
-            ghost.style.display = '';
+            // GPU 加速移动：用 transform 代替 left/top
+            ghost.style.left = (lastX - offsetX) + 'px';
+            ghost.style.top  = (lastY - offsetY) + 'px';
 
-            // 清除旧 placeholder 高亮
-            document.querySelectorAll('.drag-placeholder').forEach(c => c.classList.remove('drag-placeholder'));
+            ghost.style.visibility = 'hidden';
+            const target = document.elementFromPoint(lastX, lastY)?.closest('.currency-card');
+            ghost.style.visibility = '';
 
-            if (target && target !== dragState.card) {
-                target.classList.add('drag-placeholder');
-                dragState.overCard = target;
-            } else {
-                dragState.overCard = null;
+            const next = (target && target !== card) ? target : null;
+            if (dragState.overCard !== next) {
+                if (dragState.overCard) dragState.overCard.classList.remove('drag-over');
+                if (next) next.classList.add('drag-over');
+                dragState.overCard = next;
             }
         }
 
         function onDragEnd(e) {
             if (!dragState) return;
+            if (dragState.rafId) cancelAnimationFrame(dragState.rafId);
             const { card, ghost, currency, overCard } = dragState;
 
             ghost.remove();
             card.classList.remove('dragging');
-            document.querySelectorAll('.drag-placeholder').forEach(c => c.classList.remove('drag-placeholder'));
+            document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
 
             card.removeEventListener('pointermove', onDragMove);
             card.removeEventListener('pointerup',   onDragEnd);
