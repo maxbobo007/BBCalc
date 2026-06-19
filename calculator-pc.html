@@ -1087,11 +1087,13 @@
             ARS: 849.34, COP: 4097.56, PEN: 3.7423, UAH: 41.1834
         };
 
-        let displayCurrencies = JSON.parse(localStorage.getItem('displayCurrencies')) ||
-            Object.keys(allCurrencies).filter(c => c !== 'CNY');
+        const _savedDisplay = JSON.parse(localStorage.getItem('displayCurrencies'));
+        let displayCurrencies = (_savedDisplay && _savedDisplay.length > 0)
+            ? _savedDisplay : Object.keys(allCurrencies).filter(c => c !== 'CNY');
 
         // 货币排序（保存用户拖拽的顺序）
-        let currencyOrder = JSON.parse(localStorage.getItem('currencyOrder')) || displayCurrencies.slice();
+        const _savedOrder = JSON.parse(localStorage.getItem('currencyOrder'));
+        let currencyOrder = (_savedOrder && _savedOrder.length > 0) ? _savedOrder : displayCurrencies.slice();
 
         // 置顶货币
         let pinnedCurrencies = new Set(JSON.parse(localStorage.getItem('pinnedCurrencies')) || []);
