@@ -1358,6 +1358,8 @@
             const baseCurrency = document.getElementById('baseCurrency').value;
             const grid = document.getElementById('conversionGrid');
 
+            // 补全：displayCurrencies 里有但 currencyOrder 里没有的货币追加到末尾
+            displayCurrencies.forEach(c => { if (!currencyOrder.includes(c)) currencyOrder.push(c); });
             const filtered = currencyOrder.filter(c => displayCurrencies.includes(c) && c !== baseCurrency);
             const pinnedList = filtered.filter(c => pinnedCurrencies.has(c));
             const unpinnedList = filtered.filter(c => !pinnedCurrencies.has(c));
