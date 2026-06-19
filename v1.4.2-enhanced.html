@@ -835,6 +835,7 @@
                         <div id="userEmail" style="font-size:12px;color:var(--on-sv);"></div>
                     </div>
                     <button onclick="signOutUser()" id="signOutBtn" style="margin-left:auto;background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">退出登录</button>
+                    <button onclick="forceSyncToCloud()" id="forceSyncBtn" style="background:var(--primary-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-pc);font-size:13px;cursor:pointer;">↑ 上传本地配置</button>
                 </div>
             </div>
 
@@ -1962,6 +1963,33 @@
                 signedIn.style.display  = 'none';
             }
         });
+
+        window.forceSyncToCloud = async function() {
+            if (!currentUser) return;
+            const btn = document.getElementById('forceSyncBtn');
+            const orig = btn.textContent;
+            btn.textContent = '同步中...';
+            btn.disabled = true;
+            try {
+                const currencyOrder     = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
+                const pinnedCurrencies  = JSON.parse(localStorage.getItem('pinnedCurrencies')) || [];
+                const displayCurrencies = JSON.parse(localStorage.getItem('displayCurrencies'))|| [];
+                await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
+                    currencyOrder,
+                    pinnedCurrencies,
+                    displayCurrencies,
+                    themeMode:       localStorage.getItem('themeMode')          || 'auto',
+                    appLanguage:     localStorage.getItem('appLanguage')         || 'zh',
+                    defaultCurrency: localStorage.getItem('defaultBaseCurrency') || 'CNY',
+                    updatedAt:       Date.now()
+                });
+                btn.textContent = '✓ 已同步';
+                setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+            } catch(e) {
+                btn.textContent = '同步失败';
+                setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+            }
+        };
 
         window.signInWithGoogle = async function() {
             try { await signInWithPopup(auth, provider); }
