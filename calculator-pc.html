@@ -1127,8 +1127,12 @@
         };
 
         const _savedDisplay = JSON.parse(localStorage.getItem('displayCurrencies'));
-        let displayCurrencies = (_savedDisplay && _savedDisplay.length > 0)
+        // 如果保存的列表缺少 USD 或 EUR，视为损坏数据，重置为默认
+        const _displayValid = _savedDisplay && _savedDisplay.length > 0
+            && _savedDisplay.includes('USD') && _savedDisplay.includes('EUR');
+        let displayCurrencies = _displayValid
             ? _savedDisplay : Object.keys(allCurrencies).filter(c => c !== 'CNY');
+        if (!_displayValid) localStorage.removeItem('displayCurrencies');
 
         // 货币排序（保存用户拖拽的顺序）
         const _savedOrder = JSON.parse(localStorage.getItem('currencyOrder'));
