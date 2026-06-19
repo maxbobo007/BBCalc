@@ -807,14 +807,14 @@
                 <button class="close-btn" onclick="closeSettings()">×</button>
             </div>
 
-            <div class="section-title">账号同步</div>
+            <div class="section-title" id="st-account">账号同步</div>
             <div id="authSection" style="margin-bottom:20px;">
                 <div id="authSignedOut" style="display:flex;align-items:center;gap:12px;">
                     <button id="googleSignInBtn" onclick="signInWithGoogle()" style="display:flex;align-items:center;gap:10px;background:var(--surface-c);border:1.5px solid var(--outline-v);border-radius:12px;padding:10px 18px;color:var(--on-surface);font-size:14px;font-weight:500;cursor:pointer;transition:background 0.2s;">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18">
-                        使用 Google 账号登录
+                        <span id="signInBtnText">使用 Google 账号登录</span>
                     </button>
-                    <span style="color:var(--on-sv);font-size:12px;">登录后配置自动同步到云端</span>
+                    <span id="signInDesc" style="color:var(--on-sv);font-size:12px;">登录后配置自动同步到云端</span>
                 </div>
                 <div id="authSignedIn" style="display:none;align-items:center;gap:12px;">
                     <img id="userAvatar" src="" width="32" height="32" style="border-radius:50%;">
@@ -822,18 +822,18 @@
                         <div id="userName" style="font-size:14px;font-weight:600;color:var(--on-surface);"></div>
                         <div id="userEmail" style="font-size:12px;color:var(--on-sv);"></div>
                     </div>
-                    <button onclick="signOutUser()" style="margin-left:auto;background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">退出登录</button>
+                    <button onclick="signOutUser()" id="signOutBtn" style="margin-left:auto;background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">退出登录</button>
                 </div>
             </div>
 
-            <div class="section-title">主题外观</div>
+            <div class="section-title" id="st-theme">主题外观</div>
             <div class="theme-selector" id="themeSelector">
                 <button class="theme-btn" data-mode="light" onclick="setTheme('light')">☀️ 浅色</button>
                 <button class="theme-btn" data-mode="auto" onclick="setTheme('auto')">💻 跟随设备</button>
                 <button class="theme-btn" data-mode="dark" onclick="setTheme('dark')">🌙 深色</button>
             </div>
 
-            <div class="section-title">语言设置</div>
+            <div class="section-title" id="st-lang">语言设置</div>
             <select onchange="setLanguage(this.value)" id="langSelect" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
                 <option value="zh">中文 Chinese</option>
                 <option value="en">English</option>
@@ -843,18 +843,18 @@
                 <option value="de">Deutsch German</option>
             </select>
 
-            <div class="section-title">默认基准货币</div>
+            <div class="section-title" id="st-default">默认基准货币</div>
             <select onchange="setDefaultCurrency(this.value)" id="defaultCurrencySelect" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; cursor: pointer; width: 200px; margin-bottom: 20px;">
                 <!-- 动态生成所有货币选项 -->
             </select>
 
-            <div class="section-title">汇率数据源</div>
-            <p style="color: rgba(255, 255, 255, 0.5); font-size: 13px; margin-bottom: 12px;">
+            <div class="section-title" id="st-api">汇率数据源</div>
+            <p id="st-api-desc" style="color: var(--on-sv); font-size: 13px; margin-bottom: 12px;">
                 选择汇率API提供商，系统会按优先级依次尝试
             </p>
             <div class="currency-grid-settings" id="apiGridSettings"></div>
 
-            <div class="section-title">选择要显示的货币</div>
+            <div class="section-title" id="st-select">选择要显示的货币</div>
             <input type="text" id="currencySearchBox" placeholder="🔍 搜索货币..." onkeyup="filterCurrenciesInSettings()" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; width: 100%; margin-bottom: 12px; outline: none;">
             <div class="currency-grid-settings" id="currencyGridSettings"></div>
         </div>
@@ -874,12 +874,12 @@
         
         // 语言包
         const i18n = {
-            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', save: '保存' },
-            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'API Source', save: 'Save' },
-            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuente API', save: 'Guardar' },
-            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Source API', save: 'Sauvegarder' },
-            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: 'APIソース', save: '保存' },
-            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'API-Quelle', save: 'Speichern' }
+            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', apiDesc: '选择汇率API提供商，系统会按优先级依次尝试', save: '保存', searchMain: '搜索货币...', searchSettings: '🔍 搜索货币...', stAccount: '账号同步', stTheme: '主题外观', stLang: '语言设置', stDefault: '默认基准货币', signIn: '使用 Google 账号登录', signInDesc: '登录后配置自动同步到云端', signOut: '退出登录' },
+            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'Exchange Rate APIs', apiDesc: 'APIs are tried in priority order', save: 'Save', searchMain: 'Search currencies...', searchSettings: '🔍 Search currencies...', stAccount: 'Account Sync', stTheme: 'Appearance', stLang: 'Language', stDefault: 'Default Base Currency', signIn: 'Sign in with Google', signInDesc: 'Settings sync to cloud after sign-in', signOut: 'Sign Out' },
+            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuentes de Tasa', apiDesc: 'Las APIs se prueban en orden de prioridad', save: 'Guardar', searchMain: 'Buscar moneda...', searchSettings: '🔍 Buscar moneda...', stAccount: 'Sincronización', stTheme: 'Apariencia', stLang: 'Idioma', stDefault: 'Moneda Base por Defecto', signIn: 'Iniciar sesión con Google', signInDesc: 'La configuración se sincroniza tras iniciar sesión', signOut: 'Cerrar sesión' },
+            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Sources de Taux', apiDesc: 'Les APIs sont essayées par ordre de priorité', save: 'Sauvegarder', searchMain: 'Rechercher...', searchSettings: '🔍 Rechercher...', stAccount: 'Synchronisation', stTheme: 'Apparence', stLang: 'Langue', stDefault: 'Devise de Base par Défaut', signIn: 'Se connecter avec Google', signInDesc: 'Les paramètres se synchronisent après connexion', signOut: 'Se déconnecter' },
+            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: '為替レートAPI', apiDesc: 'APIは優先順位に従って試行されます', save: '保存', searchMain: '通貨を検索...', searchSettings: '🔍 通貨を検索...', stAccount: 'アカウント同期', stTheme: '外観', stLang: '言語', stDefault: 'デフォルト基準通貨', signIn: 'Googleでサインイン', signInDesc: 'サインイン後に設定がクラウドに同期されます', signOut: 'サインアウト' },
+            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'Wechselkurs-APIs', apiDesc: 'APIs werden der Priorität nach versucht', save: 'Speichern', searchMain: 'Währung suchen...', searchSettings: '🔍 Währung suchen...', stAccount: 'Konto-Synchronisation', stTheme: 'Erscheinungsbild', stLang: 'Sprache', stDefault: 'Standard-Basiswährung', signIn: 'Mit Google anmelden', signInDesc: 'Einstellungen nach Anmeldung in der Cloud gespeichert', signOut: 'Abmelden' }
         };
         
         function t(key) { return i18n[currentLang][key] || i18n.zh[key]; }
@@ -932,6 +932,29 @@
             document.querySelector('.currency-selector label').textContent = t('base');
             document.querySelector('.conversion-title').textContent = t('conversion');
             document.querySelectorAll('.update-btn').forEach(btn => btn.textContent = t('update'));
+            document.querySelector('.settings-title').textContent = t('settings');
+
+            // 设置面板各标题
+            const el = id => document.getElementById(id);
+            if (el('st-account'))   el('st-account').textContent   = t('stAccount');
+            if (el('st-theme'))     el('st-theme').textContent     = t('stTheme');
+            if (el('st-lang'))      el('st-lang').textContent      = t('stLang');
+            if (el('st-default'))   el('st-default').textContent   = t('stDefault');
+            if (el('st-api'))       el('st-api').textContent       = t('apiSource');
+            if (el('st-api-desc'))  el('st-api-desc').textContent  = t('apiDesc');
+            if (el('st-select'))    el('st-select').textContent    = t('selectCur');
+
+            // 登录/登出按钮
+            if (el('signInBtnText')) el('signInBtnText').textContent = t('signIn');
+            if (el('signInDesc'))    el('signInDesc').textContent    = t('signInDesc');
+            if (el('signOutBtn'))    el('signOutBtn').textContent    = t('signOut');
+
+            // 搜索框 placeholder
+            if (el('searchBox'))        el('searchBox').placeholder        = t('searchMain');
+            if (el('currencySearchBox')) el('currencySearchBox').placeholder = t('searchSettings');
+
+            // 语言选择器高亮
+            if (el('langSelect')) el('langSelect').value = lang;
 
             // 重新填充基准货币下拉框以更新语言
             populateBaseCurrencySelect();
