@@ -1487,31 +1487,17 @@
             if (e.button !== undefined && e.button !== 0) return;
 
             const card = e.currentTarget;
-            const rect = card.getBoundingClientRect();
-            const grid = document.getElementById('conversionGrid');
-
-            // 占位符撑住原来的空间
-            const placeholder = document.createElement('div');
-            placeholder.className = 'drag-placeholder-el currency-card';
-            placeholder.style.height = rect.height + 'px';
-            grid.insertBefore(placeholder, card);
-
-            // ghost 跟手
-            const ghost = card.cloneNode(true);
-            ghost.classList.add('drag-ghost');
-            ghost.style.width = rect.width + 'px';
-            ghost.style.left  = rect.left  + 'px';
-            ghost.style.top   = rect.top   + 'px';
-            document.body.appendChild(ghost);
-            card.classList.add('dragging');
-
+            // 记录按下位置，等超过阈值再真正进入拖拽
             dragState = {
-                card, ghost, placeholder, grid,
-                offsetX: e.clientX - rect.left,
-                offsetY: e.clientY - rect.top,
+                card, grid: document.getElementById('conversionGrid'),
+                startX: e.clientX, startY: e.clientY,
+                offsetX: e.clientX - card.getBoundingClientRect().left,
+                offsetY: e.clientY - card.getBoundingClientRect().top,
                 currency: card.dataset.currency,
+                ghost: null, placeholder: null,
                 overCard: null, rafId: null,
                 lastX: e.clientX, lastY: e.clientY,
+                dragging: false,
             };
 
             card.setPointerCapture(e.pointerId);
@@ -1520,10 +1506,40 @@
             card.addEventListener('pointercancel', onDragEnd);
         }
 
+        function activateDrag() {
+            if (!dragState || dragState.dragging) return;
+            dragState.dragging = true;
+            const { card, grid } = dragState;
+            const rect = card.getBoundingClientRect();
+
+            const placeholder = document.createElement('div');
+            placeholder.className = 'drag-placeholder-el currency-card';
+            placeholder.style.height = rect.height + 'px';
+            grid.insertBefore(placeholder, card);
+
+            const ghost = card.cloneNode(true);
+            ghost.classList.add('drag-ghost');
+            ghost.style.width = rect.width + 'px';
+            ghost.style.left  = rect.left  + 'px';
+            ghost.style.top   = rect.top   + 'px';
+            document.body.appendChild(ghost);
+            card.classList.add('dragging');
+
+            dragState.placeholder = placeholder;
+            dragState.ghost = ghost;
+        }
+
         function onDragMove(e) {
             if (!dragState) return;
             dragState.lastX = e.clientX;
             dragState.lastY = e.clientY;
+            // 超过 5px 才激活拖拽，避免点击被误判为拖拽
+            if (!dragState.dragging) {
+                const dx = e.clientX - dragState.startX;
+                const dy = e.clientY - dragState.startY;
+                if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+                activateDrag();
+            }
             if (!dragState.rafId) dragState.rafId = requestAnimationFrame(rafDrag);
         }
 
@@ -1554,7 +1570,15 @@
         function onDragEnd(e) {
             if (!dragState) return;
             if (dragState.rafId) cancelAnimationFrame(dragState.rafId);
-            const { card, ghost, currency, placeholder, grid } = dragState;
+            const { card, ghost, currency, placeholder, grid, dragging } = dragState;
+
+            card.removeEventListener('pointermove', onDragMove);
+            card.removeEventListener('pointerup',   onDragEnd);
+            card.removeEventListener('pointercancel', onDragEnd);
+            dragState = null;
+
+            // 没有真正拖拽（只是点击），直接清理退出，让 click 事件正常触发
+            if (!dragging) return;
 
             const gridChildren = [...grid.children];
             const placeholderIdx = gridChildren.indexOf(placeholder);
@@ -1577,12 +1601,6 @@
             card.classList.remove('dragging');
             card.style.transition = '';
             card.style.transform  = '';
-
-            card.removeEventListener('pointermove', onDragMove);
-            card.removeEventListener('pointerup',   onDragEnd);
-            card.removeEventListener('pointercancel', onDragEnd);
-
-            dragState = null;
 
             // 根据落点区域自动置顶/取消置顶
             if (dropInPinnedZone) {
