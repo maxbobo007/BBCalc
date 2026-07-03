@@ -2,14 +2,10 @@ name: Build & Release Mac App
 
 on:
   push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g. v1.4.3)'
-        required: true
-        default: 'v1.4.3'
+    branches:
+      - main
+    paths:
+      - 'package.json'
 
 permissions:
   contents: write
@@ -22,21 +18,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read version from package.json
+        id: version
+        run: echo "VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if release already exists
+        id: check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.VERSION }}")
+          if [ "$STATUS" = "200" ]; then
+            echo "EXISTS=true" >> $GITHUB_OUTPUT
+          else
+            echo "EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node.js
+        if: steps.check.outputs.EXISTS == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
       - name: Install dependencies
+        if: steps.check.outputs.EXISTS == 'false'
         run: npm install
 
       - name: Build Mac app (Universal)
+        if: steps.check.outputs.EXISTS == 'false'
         run: npm run build:mac-universal -- --publish never
 
       - name: Upload to GitHub Release
+        if: steps.check.outputs.EXISTS == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: ${{ steps.version.outputs.VERSION }}
           files: |
             dist/*.dmg
             dist/*.zip
