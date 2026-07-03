@@ -1,7 +1,7 @@
 {
   "name": "bbcalc",
   "productName": "BBCalc",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "波波汇率计算器 - 专业的多货币汇率计算工具",
   "main": "main.js",
   "author": {
