@@ -1,4 +1,4 @@
-name: Build Android APK (TWA)
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -40,7 +40,7 @@ jobs:
 
       - name: Collect APK
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
           cp android/app/build/outputs/apk/release/app-release.apk "BBCalc-v${VERSION}-android.apk"
           echo "APK_NAME=BBCalc-v${VERSION}-android.apk" >> $GITHUB_ENV
 
@@ -57,9 +57,9 @@ jobs:
           tag_name: android-latest
           name: 'Android APK（滚动更新）'
           body: |
-            TWA 安卓安装包，内容即网页版（网页更新后 App 内容自动同步，无需重装）。
+            原生安卓版（Kotlin + Jetpack Compose），核心逻辑与网页版一致，不依赖浏览器、离线可用。
 
-            安装：下载 APK → 手机上打开 → 允许安装未知来源应用。
+            安装：下载 APK → 手机上打开 → 允许安装未知来源应用。旧版（TWA）可直接覆盖升级。
             签名说明见 android/README.md。
           prerelease: true
           files: ${{ env.APK_NAME }}

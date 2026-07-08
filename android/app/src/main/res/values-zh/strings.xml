@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">波波汇率</string>
+    <string name="title">波波汇率计算器</string>
+    <string name="conversion_title">实时汇率换算</string>
+    <string name="search_hint">搜索货币…</string>
+    <string name="update">手动更新</string>
+    <string name="updating">更新中…</string>
+    <string name="status_live">实时汇率</string>
+    <string name="status_cached">缓存汇率</string>
+    <string name="status_offline">离线汇率</string>
+    <string name="builtin_data">内置数据</string>
+    <string name="calc_error">错误</string>
+    <string name="pin">置顶</string>
+</resources>
