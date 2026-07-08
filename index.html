@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" id="metaThemeColor" content="#0e0d12">
-    <title>波波汇率计算器 v1.5.2 - BBCalc</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BBCalc">
+    <title>波波汇率计算器 v1.6.0 - BBCalc</title>
     <style>
         /* ── 主题变量 ── */
         :root {
@@ -1009,7 +1016,7 @@
                 <div class="title">
                     波波汇率计算器
                     <span class="active-currency-badge" id="activeCurrencyBadge">CNY</span>
-                    <span class="version-badge">v1.5.2</span>
+                    <span class="version-badge">v1.6.0</span>
                 </div>
                 <button class="settings-btn" onclick="openSettings()">⚙️</button>
             </div>
@@ -1136,7 +1143,7 @@
             <input type="text" id="currencySearchBox" placeholder="🔍 搜索货币..." onkeyup="filterCurrenciesInSettings()" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; width: 100%; margin-bottom: 12px; outline: none;">
             <div class="currency-grid-settings" id="currencyGridSettings"></div>
 
-            <div class="settings-footer">BBCalc v1.5.2</div>
+            <div class="settings-footer">BBCalc v1.6.0</div>
         </div>
     </div>
 
@@ -1144,9 +1151,9 @@
         let expression = '100';
         let result = 100;
         let lastUpdate = new Date();
-        let usingOfflineRates = true;
         let activeCurrency = 'CNY';
-        let rateSource = '内置数据'; // 汇率来源
+        let rateState = 'builtin';  // builtin | cached | live
+        let rateSourceName = '';    // 汇率来源（API 名）
         let currentLang = localStorage.getItem('appLanguage') || 'zh';
         let themeMode = localStorage.getItem('themeMode') || 'auto';
         let showCursor = true;
@@ -1154,12 +1161,12 @@
         
         // 语言包
         const i18n = {
-            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', apiDesc: '选择汇率API提供商，系统会按优先级依次尝试', save: '保存', searchMain: '搜索货币...', searchSettings: '🔍 搜索货币...', stAccount: '账号同步', stTheme: '主题外观', stLang: '语言设置', stDefault: '默认基准货币', signIn: '使用 Google 账号登录', signInDesc: '登录后配置自动同步到云端', signOut: '退出登录', themeLight: '☀️ 浅色', themeAuto: '💻 跟随设备', themeDark: '🌙 深色' },
-            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'Exchange Rate APIs', apiDesc: 'APIs are tried in priority order', save: 'Save', searchMain: 'Search currencies...', searchSettings: '🔍 Search currencies...', stAccount: 'Account Sync', stTheme: 'Appearance', stLang: 'Language', stDefault: 'Default Base Currency', signIn: 'Sign in with Google', signInDesc: 'Settings sync to cloud after sign-in', signOut: 'Sign Out', themeLight: '☀️ Light', themeAuto: '💻 Auto', themeDark: '🌙 Dark' },
-            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuentes de Tasa', apiDesc: 'Las APIs se prueban en orden de prioridad', save: 'Guardar', searchMain: 'Buscar moneda...', searchSettings: '🔍 Buscar moneda...', stAccount: 'Sincronización', stTheme: 'Apariencia', stLang: 'Idioma', stDefault: 'Moneda Base por Defecto', signIn: 'Iniciar sesión con Google', signInDesc: 'La configuración se sincroniza tras iniciar sesión', signOut: 'Cerrar sesión', themeLight: '☀️ Claro', themeAuto: '💻 Auto', themeDark: '🌙 Oscuro' },
-            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Sources de Taux', apiDesc: 'Les APIs sont essayées par ordre de priorité', save: 'Sauvegarder', searchMain: 'Rechercher...', searchSettings: '🔍 Rechercher...', stAccount: 'Synchronisation', stTheme: 'Apparence', stLang: 'Langue', stDefault: 'Devise de Base par Défaut', signIn: 'Se connecter avec Google', signInDesc: 'Les paramètres se synchronisent après connexion', signOut: 'Se déconnecter', themeLight: '☀️ Clair', themeAuto: '💻 Auto', themeDark: '🌙 Sombre' },
-            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: '為替レートAPI', apiDesc: 'APIは優先順位に従って試行されます', save: '保存', searchMain: '通貨を検索...', searchSettings: '🔍 通貨を検索...', stAccount: 'アカウント同期', stTheme: '外観', stLang: '言語', stDefault: 'デフォルト基準通貨', signIn: 'Googleでサインイン', signInDesc: 'サインイン後に設定がクラウドに同期されます', signOut: 'サインアウト', themeLight: '☀️ ライト', themeAuto: '💻 自動', themeDark: '🌙 ダーク' },
-            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'Wechselkurs-APIs', apiDesc: 'APIs werden der Priorität nach versucht', save: 'Speichern', searchMain: 'Währung suchen...', searchSettings: '🔍 Währung suchen...', stAccount: 'Konto-Synchronisation', stTheme: 'Erscheinungsbild', stLang: 'Sprache', stDefault: 'Standard-Basiswährung', signIn: 'Mit Google anmelden', signInDesc: 'Einstellungen nach Anmeldung in der Cloud gespeichert', signOut: 'Abmelden', themeLight: '☀️ Hell', themeAuto: '💻 Automatisch', themeDark: '🌙 Dunkel' }
+            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', apiDesc: '选择汇率API提供商，系统会按优先级依次尝试', save: '保存', searchMain: '搜索货币...', searchSettings: '🔍 搜索货币...', stAccount: '账号同步', stTheme: '主题外观', stLang: '语言设置', stDefault: '默认基准货币', signIn: '使用 Google 账号登录', signInDesc: '登录后配置自动同步到云端', signOut: '退出登录', themeLight: '☀️ 浅色', themeAuto: '💻 跟随设备', themeDark: '🌙 深色', err: '错误', statusLive: '实时汇率', statusOffline: '离线汇率', statusCached: '缓存汇率', source: '数据来源', builtin: '内置数据' },
+            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'Exchange Rate APIs', apiDesc: 'APIs are tried in priority order', save: 'Save', searchMain: 'Search currencies...', searchSettings: '🔍 Search currencies...', stAccount: 'Account Sync', stTheme: 'Appearance', stLang: 'Language', stDefault: 'Default Base Currency', signIn: 'Sign in with Google', signInDesc: 'Settings sync to cloud after sign-in', signOut: 'Sign Out', themeLight: '☀️ Light', themeAuto: '💻 Auto', themeDark: '🌙 Dark', err: 'Error', statusLive: 'Live rates', statusOffline: 'Offline rates', statusCached: 'Cached rates', source: 'Source', builtin: 'Built-in data' },
+            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuentes de Tasa', apiDesc: 'Las APIs se prueban en orden de prioridad', save: 'Guardar', searchMain: 'Buscar moneda...', searchSettings: '🔍 Buscar moneda...', stAccount: 'Sincronización', stTheme: 'Apariencia', stLang: 'Idioma', stDefault: 'Moneda Base por Defecto', signIn: 'Iniciar sesión con Google', signInDesc: 'La configuración se sincroniza tras iniciar sesión', signOut: 'Cerrar sesión', themeLight: '☀️ Claro', themeAuto: '💻 Auto', themeDark: '🌙 Oscuro', err: 'Error', statusLive: 'Tasas en vivo', statusOffline: 'Tasas sin conexión', statusCached: 'Tasas en caché', source: 'Fuente', builtin: 'Datos integrados' },
+            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Sources de Taux', apiDesc: 'Les APIs sont essayées par ordre de priorité', save: 'Sauvegarder', searchMain: 'Rechercher...', searchSettings: '🔍 Rechercher...', stAccount: 'Synchronisation', stTheme: 'Apparence', stLang: 'Langue', stDefault: 'Devise de Base par Défaut', signIn: 'Se connecter avec Google', signInDesc: 'Les paramètres se synchronisent après connexion', signOut: 'Se déconnecter', themeLight: '☀️ Clair', themeAuto: '💻 Auto', themeDark: '🌙 Sombre', err: 'Erreur', statusLive: 'Taux en direct', statusOffline: 'Taux hors ligne', statusCached: 'Taux en cache', source: 'Source', builtin: 'Données intégrées' },
+            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: '為替レートAPI', apiDesc: 'APIは優先順位に従って試行されます', save: '保存', searchMain: '通貨を検索...', searchSettings: '🔍 通貨を検索...', stAccount: 'アカウント同期', stTheme: '外観', stLang: '言語', stDefault: 'デフォルト基準通貨', signIn: 'Googleでサインイン', signInDesc: 'サインイン後に設定がクラウドに同期されます', signOut: 'サインアウト', themeLight: '☀️ ライト', themeAuto: '💻 自動', themeDark: '🌙 ダーク', err: 'エラー', statusLive: 'リアルタイムレート', statusOffline: 'オフラインレート', statusCached: 'キャッシュレート', source: 'データ元', builtin: '内蔵データ' },
+            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'Wechselkurs-APIs', apiDesc: 'APIs werden der Priorität nach versucht', save: 'Speichern', searchMain: 'Währung suchen...', searchSettings: '🔍 Währung suchen...', stAccount: 'Konto-Synchronisation', stTheme: 'Erscheinungsbild', stLang: 'Sprache', stDefault: 'Standard-Basiswährung', signIn: 'Mit Google anmelden', signInDesc: 'Einstellungen nach Anmeldung in der Cloud gespeichert', signOut: 'Abmelden', themeLight: '☀️ Hell', themeAuto: '💻 Automatisch', themeDark: '🌙 Dunkel', err: 'Fehler', statusLive: 'Live-Kurse', statusOffline: 'Offline-Kurse', statusCached: 'Kurse aus Cache', source: 'Quelle', builtin: 'Integrierte Daten' }
         };
         
         function t(key) { return i18n[currentLang][key] || i18n.zh[key]; }
@@ -1244,19 +1251,18 @@
             // 重新填充基准货币下拉框以更新语言
             populateBaseCurrencySelect();
 
+            // 汇率信息栏（状态/来源/按钮）随语言刷新
+            if (typeof updateRateInfo === 'function' && document.querySelector('#rateInfo .update-btn')) {
+                updateRateInfo();
+            }
+
             // 重新渲染货币列表以更新语言
             updateConversion();
         }
         
         // 所有可用的汇率API
+        // 注：ExchangeRate.host 已改为强制 API key，免费匿名访问失效，故移除
         const availableAPIs = {
-            'exchangerate': {
-                name: 'ExchangeRate.host',
-                url: 'https://api.exchangerate.host/latest?base=USD',
-                parser: (data) => data.rates,
-                description: '免费服务，支持180+货币',
-                note: '在中国大陆可能无法访问'
-            },
             'frankfurter': {
                 name: 'Frankfurter (ECB)',
                 url: 'https://api.frankfurter.app/latest?from=USD',
@@ -1274,15 +1280,15 @@
         };
         
         // 用户选择的API优先级（从localStorage读取）
-        let preferredAPIs = JSON.parse(localStorage.getItem('preferredAPIs')) || 
-            ['currencyapi', 'exchangerate', 'frankfurter'];
-        
+        let preferredAPIs = JSON.parse(localStorage.getItem('preferredAPIs')) ||
+            ['currencyapi', 'frankfurter'];
+
         // 验证并清理无效的API keys
         preferredAPIs = preferredAPIs.filter(key => availableAPIs[key]);
-        
+
         // 如果所有API都无效，重置为默认值
         if (preferredAPIs.length === 0) {
-            preferredAPIs = ['currencyapi', 'exchangerate', 'frankfurter'];
+            preferredAPIs = ['currencyapi', 'frankfurter'];
             localStorage.setItem('preferredAPIs', JSON.stringify(preferredAPIs));
             console.log('检测到无效的API配置，已重置为默认值');
         }
@@ -1395,10 +1401,22 @@
             ARS: 849.34, COP: 4097.56, PEN: 3.7423, UAH: 41.1834
         };
 
-        const _savedDisplay = JSON.parse(localStorage.getItem('displayCurrencies'));
-        // 如果保存的列表缺少 USD 或 EUR，视为损坏数据，重置为默认
-        const _displayValid = _savedDisplay && _savedDisplay.length > 0
-            && _savedDisplay.includes('USD') && _savedDisplay.includes('EUR');
+        // 启动时优先使用上次成功获取并缓存的汇率（比内置静态数据新鲜）
+        try {
+            const _cached = JSON.parse(localStorage.getItem('cachedRates'));
+            if (_cached && _cached.rates && typeof _cached.rates.USD === 'number') {
+                exchangeRates = { ...exchangeRates, ..._cached.rates };
+                lastUpdate = new Date(_cached.ts || Date.now());
+                rateState = 'cached';
+                rateSourceName = _cached.source || '';
+            }
+        } catch (e) { /* 缓存损坏则忽略，继续用内置数据 */ }
+
+        let _savedDisplay = null;
+        try { _savedDisplay = JSON.parse(localStorage.getItem('displayCurrencies')); } catch (e) {}
+        // 结构校验：必须是已知货币代码的数组；用户可以自由勾选（包括关闭 USD/EUR）
+        const _displayValid = Array.isArray(_savedDisplay)
+            && _savedDisplay.every(c => typeof c === 'string' && allCurrencies[c]);
         let displayCurrencies = _displayValid
             ? _savedDisplay : Object.keys(allCurrencies).filter(c => c !== 'CNY');
         if (!_displayValid) localStorage.removeItem('displayCurrencies');
@@ -1422,7 +1440,26 @@
         }
 
         // 计算器功能
+        const ERR = '__error__'; // 错误哨兵值，显示时经 t('err') 本地化
+
+        // 安全求值：白名单校验字符，浮点结果修正精度（0.1+0.2 → 0.3）
+        function evalExpression(expr) {
+            const normalized = expr
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/')
+                .replace(/−/g, '-');
+            if (!normalized || !/^[\d+\-*/.()\s]+$/.test(normalized)) return null;
+            try {
+                const value = Function('"use strict"; return (' + normalized + ')')();
+                if (typeof value !== 'number' || !isFinite(value)) return null;
+                return parseFloat(value.toPrecision(12));
+            } catch (error) {
+                return null;
+            }
+        }
+
         function append(value) {
+            if (expression === ERR) expression = ''; // 出错后直接开始新输入
             if (expression === '0' && value !== '.') {
                 expression = value;
             } else {
@@ -1433,6 +1470,7 @@
         }
 
         function backspace() {
+            if (expression === ERR) { clearCalc(); return; }
             if (expression.length > 0) {
                 expression = expression.slice(0, -1);
                 triggerFlash();
@@ -1456,7 +1494,7 @@
 
         function toggleSign() {
             if (result !== 0) {
-                result = -result;
+                result = parseFloat((-result).toPrecision(12));
                 expression = result.toString();
                 updateDisplay();
             }
@@ -1464,52 +1502,37 @@
 
         function percentage() {
             if (result !== 0) {
-                result = result / 100;
+                result = parseFloat((result / 100).toPrecision(12));
                 expression = result.toString();
                 updateDisplay();
             }
         }
 
         function calculate() {
-            try {
-                let calcExpression = expression
-                    .replace(/×/g, '*')
-                    .replace(/÷/g, '/')
-                    .replace(/−/g, '-');
-                
-                result = Function('"use strict"; return (' + calcExpression + ')')();
-                
-                if (!isFinite(result)) {
-                    result = 0;
-                    expression = '错误';
-                } else {
-                    expression = result.toString();
-                }
-            } catch (error) {
+            const value = evalExpression(expression);
+            if (value === null) {
                 result = 0;
-                expression = '错误';
+                expression = ERR;
+            } else {
+                result = value;
+                expression = value.toString();
             }
             updateDisplay();
         }
 
         function updateDisplay() {
-            document.getElementById('expression').textContent = expression || '';
+            document.getElementById('expression').textContent =
+                expression === ERR ? t('err') : (expression || '');
 
             let currentValue = result;
-            if (expression && expression !== '错误') {
-                try {
-                    let calcExpression = expression
-                        .replace(/×/g, '*')
-                        .replace(/÷/g, '/')
-                        .replace(/−/g, '-');
-
-                    currentValue = Function('"use strict"; return (' + calcExpression + ')')();
-                    if (!isFinite(currentValue)) {
-                        currentValue = 0;
-                    }
-                } catch (error) {
-                    currentValue = 0;
+            if (expression && expression !== ERR) {
+                // 实时预览：表达式未输完（如 "5+"）时按已完成部分求值；
+                // 仍失败则保留上一个有效值，避免换算列表闪 0
+                let value = evalExpression(expression);
+                if (value === null) {
+                    value = evalExpression(expression.replace(/[+\-*/.×÷−\s]+$/, ''));
                 }
+                if (value !== null) currentValue = value;
             }
 
             // 使用千分符格式化
@@ -1524,7 +1547,7 @@
 
             // 添加光标效果
             const resultElement = document.getElementById('result');
-            if (expression && expression !== '错误') {
+            if (expression && expression !== ERR) {
                 resultElement.innerHTML = displayValue + '<span class="cursor"></span>';
             } else {
                 resultElement.textContent = displayValue;
@@ -1538,7 +1561,7 @@
         // 汇率换算
         async function fetchRates() {
             const rateInfo = document.getElementById('rateInfo');
-            rateInfo.innerHTML = '更新中...<br><button class="update-btn" onclick="fetchRates()">手动更新</button>';
+            rateInfo.innerHTML = `${t('loading')} <button class="update-btn" onclick="fetchRates()">${t('update')}</button>`;
 
             // 根据用户选择构建API列表
             const APIs = preferredAPIs
@@ -1546,10 +1569,7 @@
                 .filter(api => api); // 过滤掉无效的API
 
             if (APIs.length === 0) {
-                console.log('没有启用任何API，使用离线汇率');
-                usingOfflineRates = true;
-                rateSource = '内置数据（未启用任何API）';
-                lastUpdate = new Date();
+                console.log('没有启用任何API，保持当前汇率数据');
                 updateRateInfo();
                 updateConversion();
                 return;
@@ -1586,12 +1606,21 @@
                         
                         exchangeRates = { ...exchangeRates, ...normalizedRates };
                         lastUpdate = new Date();
-                        usingOfflineRates = false;
-                        rateSource = api.name; // 记录来源
-                        
+                        rateState = 'live';
+                        rateSourceName = api.name;
+
+                        // 缓存本次汇率：断网或下次启动时替代过期的内置数据
+                        try {
+                            localStorage.setItem('cachedRates', JSON.stringify({
+                                rates: normalizedRates,
+                                ts: Date.now(),
+                                source: api.name
+                            }));
+                        } catch (e) { /* 存储满等异常忽略 */ }
+
                         updateRateInfo();
                         updateConversion();
-                        
+
                         console.log(`✓ 成功从 ${api.name} 获取汇率`);
                         return;
                     } else {
@@ -1603,12 +1632,10 @@
                 }
             }
             
-            // 所有API都失败，使用离线汇率
+            // 所有API都失败：保留现有数据（本次会话已获取的实时数据 / 缓存 / 内置），
+            // 不伪造 lastUpdate 时间戳，让用户看到数据的真实新旧程度
             console.log(`所有API都失败 (尝试了: ${attemptedAPIs.join(', ')})`);
             console.log('可能原因：网络限制、API服务器故障、或需要VPN访问');
-            usingOfflineRates = true;
-            rateSource = '内置数据 (2025-01)';
-            lastUpdate = new Date();
             updateRateInfo();
             updateConversion();
         }
@@ -1616,22 +1643,27 @@
         const mobileLayoutQuery = window.matchMedia('(max-width: 900px)');
 
         function updateRateInfo() {
-            const status = usingOfflineRates ? '离线汇率' : '实时汇率';
+            const statusMap = { live: t('statusLive'), cached: t('statusCached'), builtin: t('statusOffline') };
+            const status = statusMap[rateState] || t('statusOffline');
+            const sourceName = rateState === 'builtin' ? `${t('builtin')} (2025-01)` : rateSourceName;
             const rateInfo = document.getElementById('rateInfo');
             if (mobileLayoutQuery.matches) {
-                // 手机上用紧凑单行格式
-                const timeStr = lastUpdate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                // 手机上用紧凑单行格式；缓存/内置数据显示日期而非仅时分，体现新旧
+                const timeStr = rateState === 'live'
+                    ? lastUpdate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                    : lastUpdate.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
+                      + ' ' + lastUpdate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
                 rateInfo.innerHTML = `
-                    ${timeStr} ${status} · <strong style="color: #0A84FF">${rateSource}</strong>
-                    <button class="update-btn" onclick="fetchRates()">手动更新</button>
+                    ${timeStr} ${status} · <strong style="color: #0A84FF">${sourceName}</strong>
+                    <button class="update-btn" onclick="fetchRates()">${t('update')}</button>
                 `;
                 return;
             }
             const timeStr = lastUpdate.toLocaleString('zh-CN');
             rateInfo.innerHTML = `
                 ${timeStr} (${status})<br>
-                数据来源: <strong style="color: #0A84FF">${rateSource}</strong><br>
-                <button class="update-btn" onclick="fetchRates()">手动更新</button>
+                ${t('source')}: <strong style="color: #0A84FF">${sourceName}</strong><br>
+                <button class="update-btn" onclick="fetchRates()">${t('update')}</button>
             `;
         }
 
@@ -2288,7 +2320,51 @@
             badge.addEventListener('animationend', () => badge.classList.remove('swapping'), { once: true });
         }
 
-        console.log('=== 波波汇率计算器 BBCalc v1.5.2 ===');
+        // 登录后应用云端配置：直接更新内存状态并重渲染，无需刷新页面
+        window.applyCloudConfig = function(data) {
+            if (!data) return;
+            if (Array.isArray(data.currencyOrder) && data.currencyOrder.length > 0) {
+                currencyOrder = data.currencyOrder.slice();
+                localStorage.setItem('currencyOrder', JSON.stringify(currencyOrder));
+            }
+            if (Array.isArray(data.pinnedCurrencies)) {
+                pinnedCurrencies = new Set(data.pinnedCurrencies);
+                localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
+            }
+            if (Array.isArray(data.displayCurrencies)) {
+                const valid = data.displayCurrencies.filter(c => allCurrencies[c]);
+                displayCurrencies = valid;
+                localStorage.setItem('displayCurrencies', JSON.stringify(valid));
+            }
+            if (data.themeMode) {
+                themeMode = data.themeMode;
+                localStorage.setItem('themeMode', themeMode);
+                applyTheme(themeMode);
+            }
+            if (data.defaultCurrency && allCurrencies[data.defaultCurrency]) {
+                defaultBaseCurrency = data.defaultCurrency;
+                localStorage.setItem('defaultBaseCurrency', defaultBaseCurrency);
+            }
+            if (data.appLanguage && i18n[data.appLanguage]) {
+                setLanguage(data.appLanguage); // 内部会重新渲染货币列表
+            } else {
+                updateConversion();
+            }
+            // 设置面板若开着，刷新其中的勾选状态
+            if (document.getElementById('settingsOverlay').classList.contains('active')) {
+                renderSettings();
+            }
+        };
+
+        // 注册 Service Worker：离线可用（仅 http/https；Electron file:// 下自动跳过）
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .catch(e => console.warn('Service Worker 注册失败', e));
+            });
+        }
+
+        console.log('=== 波波汇率计算器 BBCalc v1.6.0 ===');
     </script>
 
     <!-- Firebase SDK -->
@@ -2316,7 +2392,7 @@
         let currentUser = null;
         let syncTimeout = null;
 
-        // 读取云端配置并应用
+        // 读取云端配置并就地应用（不刷新页面）
         async function loadFromCloud(uid) {
             try {
                 const snap = await getDoc(doc(db, 'users', uid, 'config', 'settings'));
@@ -2326,24 +2402,7 @@
                     return;
                 }
 
-                const data = snap.data();
-
-                // currencyOrder：用云端顺序
-                const cloudOrder = data.currencyOrder || [];
-                if (cloudOrder.length > 0) {
-                    localStorage.setItem('currencyOrder', JSON.stringify(cloudOrder));
-                }
-
-                if (data.pinnedCurrencies) localStorage.setItem('pinnedCurrencies', JSON.stringify(data.pinnedCurrencies));
-                if (data.themeMode)        localStorage.setItem('themeMode',          data.themeMode);
-                if (data.appLanguage)      localStorage.setItem('appLanguage',         data.appLanguage);
-                if (data.defaultCurrency)  localStorage.setItem('defaultBaseCurrency', data.defaultCurrency);
-
-                // 重新加载以应用配置（防止循环 reload）
-                if (!sessionStorage.getItem('cloudLoaded')) {
-                    sessionStorage.setItem('cloudLoaded', '1');
-                    location.reload();
-                }
+                if (window.applyCloudConfig) window.applyCloudConfig(snap.data());
             } catch(e) { console.warn('云端读取失败', e); }
         }
 
@@ -2355,9 +2414,12 @@
                 try {
                     const currencyOrder     = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
                     const pinnedCurrencies  = JSON.parse(localStorage.getItem('pinnedCurrencies')) || [];
+                    const displayStored     = JSON.parse(localStorage.getItem('displayCurrencies'));
                     await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
                         currencyOrder,
                         pinnedCurrencies,
+                        // 用户从未改过货币勾选（localStorage 无记录）时不写该字段，避免覆盖云端
+                        ...(Array.isArray(displayStored) ? { displayCurrencies: displayStored } : {}),
                         themeMode:       localStorage.getItem('themeMode')           || 'auto',
                         appLanguage:     localStorage.getItem('appLanguage')          || 'zh',
                         defaultCurrency: localStorage.getItem('defaultBaseCurrency')  || 'CNY',
@@ -2394,10 +2456,11 @@
             try {
                 const currencyOrder     = JSON.parse(localStorage.getItem('currencyOrder'))    || [];
                 const pinnedCurrencies  = JSON.parse(localStorage.getItem('pinnedCurrencies')) || [];
-                const displayCurrencies = JSON.parse(localStorage.getItem('displayCurrencies'))|| [];
+                const displayStored     = JSON.parse(localStorage.getItem('displayCurrencies'));
                 await setDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'), {
                     currencyOrder,
                     pinnedCurrencies,
+                    ...(Array.isArray(displayStored) ? { displayCurrencies: displayStored } : {}),
                     themeMode:       localStorage.getItem('themeMode')          || 'auto',
                     appLanguage:     localStorage.getItem('appLanguage')         || 'zh',
                     defaultCurrency: localStorage.getItem('defaultBaseCurrency') || 'CNY',
