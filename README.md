@@ -1,8 +1,13 @@
 # BBCalc 波波汇率计算器
 
-一个简洁好用的多货币汇率计算器，支持网页版和 Mac 桌面版。
+一个简洁好用的多货币汇率计算器，核心逻辑跨全平台一致。
 
-**[🌐 打开网页版](https://maxbobo007.github.io/BBCalc/)**
+| 平台 | 入口 |
+|---|---|
+| 🌐 网页版 / PWA（可添加到主屏幕、离线可用） | **[打开网页版](https://maxbobo007.github.io/BBCalc/)** |
+| 🤖 安卓原生 App（Kotlin + Compose） | **[下载 APK](https://github.com/maxbobo007/BBCalc/releases/tag/android-latest)** · [说明](android/README.md) |
+| 💻 Mac 桌面版（Electron） | [Releases](https://github.com/maxbobo007/BBCalc/releases) |
+| 💬 微信小程序 | [源码与上手指南](miniprogram/README.md)（用微信开发者工具导入 `miniprogram/`） |
 
 ---
 

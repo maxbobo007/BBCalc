@@ -1,0 +1,47 @@
+<view class="page {{themeClass}}">
+  <scroll-view scroll-y class="settings-scroll">
+    <view class="panel">
+
+      <view class="section">主题外观</view>
+      <view class="theme-row">
+        <view class="theme-btn {{themeMode === 'light' ? 'active' : ''}}"
+              bindtap="onTheme" data-mode="light">☀️ 浅色</view>
+        <view class="theme-btn {{themeMode === 'auto' ? 'active' : ''}}"
+              bindtap="onTheme" data-mode="auto">💻 跟随设备</view>
+        <view class="theme-btn {{themeMode === 'dark' ? 'active' : ''}}"
+              bindtap="onTheme" data-mode="dark">🌙 深色</view>
+      </view>
+
+      <view class="section">默认基准货币</view>
+      <picker range="{{basePickerRange}}" bindchange="onBasePick">
+        <view class="row-select">
+          <text class="row-select-text">{{baseLabel}}</text>
+          <text class="row-select-arrow">▾</text>
+        </view>
+      </picker>
+
+      <view class="section">云同步</view>
+      <view class="row-between">
+        <view class="sync-info">
+          <text class="sync-title">配置云同步</text>
+          <text class="sync-desc">{{cloudReady ? '基于微信云开发，多设备共享配置' : '需先在开发者工具开通云开发（见 README）'}}</text>
+        </view>
+        <switch checked="{{syncOn}}" bindchange="onToggleSync" color="#4285f4" />
+      </view>
+
+      <view class="section">选择要显示的货币</view>
+      <input class="settings-search" placeholder="🔍 搜索货币…" placeholder-class="search-ph"
+             value="{{search}}" bindinput="onSearch" />
+      <view class="cur-list">
+        <view wx:for="{{items}}" wx:key="code" class="cur-row">
+          <text class="cur-code">{{item.flag}} {{item.code}}</text>
+          <text class="cur-name">{{item.name}}</text>
+          <switch checked="{{item.on}}" bindchange="onToggleCurrency"
+                  data-code="{{item.code}}" color="#4285f4" />
+        </view>
+      </view>
+
+      <view class="footer">BBCalc 小程序版 · 核心逻辑与网页版一致</view>
+    </view>
+  </scroll-view>
+</view>

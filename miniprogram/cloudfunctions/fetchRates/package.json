@@ -1,0 +1,7 @@
+{
+  "name": "fetchRates",
+  "version": "1.0.0",
+  "description": "BBCalc 汇率获取云函数",
+  "main": "index.js",
+  "dependencies": {}
+}

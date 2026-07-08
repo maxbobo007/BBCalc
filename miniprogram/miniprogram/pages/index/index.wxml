@@ -1,0 +1,80 @@
+<view class="page {{themeClass}}">
+
+  <!-- 汇率面板 -->
+  <view class="panel rates">
+    <view class="rates-header">
+      <text class="rates-title">实时汇率换算</text>
+      <input class="search" placeholder="搜索货币…" placeholder-class="search-ph"
+             value="{{search}}" bindinput="onSearch" />
+    </view>
+    <scroll-view scroll-y class="grid-scroll">
+      <view class="grid">
+        <view wx:for="{{cards}}" wx:key="code"
+              class="card {{item.pinned ? 'pinned' : ''}}"
+              bindtap="onCardTap" data-code="{{item.code}}">
+          <view class="card-top">
+            <text class="card-code">{{item.flag}} {{item.code}}</text>
+            <text class="card-name">{{item.name}}</text>
+          </view>
+          <text class="card-value">{{item.value}}</text>
+          <text class="card-pin {{item.pinned ? 'on' : ''}}"
+                catchtap="onPinTap" data-code="{{item.code}}">📌</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 计算器面板 -->
+  <view class="panel calc">
+    <view class="calc-header">
+      <text class="calc-title">波波汇率计算器</text>
+      <text class="badge">{{base}}</text>
+      <view class="spacer" />
+      <view class="gear" bindtap="openSettings">⚙️</view>
+    </view>
+
+    <view class="display">
+      <text class="expr">{{expressionText}}</text>
+      <text class="result">{{resultText}}</text>
+    </view>
+
+    <view class="krow">
+      <view class="key fn" bindtap="onKey" data-k="C">C</view>
+      <view class="key fn" bindtap="onKey" data-k="S">+/−</view>
+      <view class="key fn" bindtap="onKey" data-k="P">%</view>
+      <view class="key bs" bindtap="onKey" data-k="B">⌫</view>
+    </view>
+    <view class="krow">
+      <view class="key" bindtap="onKey" data-k="7">7</view>
+      <view class="key" bindtap="onKey" data-k="8">8</view>
+      <view class="key" bindtap="onKey" data-k="9">9</view>
+      <view class="key op" bindtap="onKey" data-k="/">÷</view>
+    </view>
+    <view class="krow">
+      <view class="key" bindtap="onKey" data-k="4">4</view>
+      <view class="key" bindtap="onKey" data-k="5">5</view>
+      <view class="key" bindtap="onKey" data-k="6">6</view>
+      <view class="key op" bindtap="onKey" data-k="*">×</view>
+    </view>
+    <view class="krow">
+      <view class="key" bindtap="onKey" data-k="1">1</view>
+      <view class="key" bindtap="onKey" data-k="2">2</view>
+      <view class="key" bindtap="onKey" data-k="3">3</view>
+      <view class="key op" bindtap="onKey" data-k="-">−</view>
+    </view>
+    <view class="krow">
+      <view class="key zero" bindtap="onKey" data-k="0">0</view>
+      <view class="key" bindtap="onKey" data-k=".">.</view>
+      <view class="key op" bindtap="onKey" data-k="+">+</view>
+    </view>
+    <view class="krow">
+      <view class="key eq" bindtap="onKey" data-k="=">=</view>
+    </view>
+
+    <view class="rate-info">
+      <text class="rate-text">{{updating ? '更新中…' : rateInfo}}</text>
+      <text class="rate-btn" bindtap="fetchRates">手动更新</text>
+    </view>
+  </view>
+
+</view>
