@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BBCalc</string>
-    <!-- Digital Asset Links 声明：与站点 .well-known/assetlinks.json 配对后隐藏浏览器地址栏 -->
-    <string name="asset_statements">
-        [{
-            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
-            \"target\": {
-                \"namespace\": \"web\",
-                \"site\": \"https://maxbobo007.github.io\"
-            }
-        }]
-    </string>
+    <string name="title">BBCalc</string>
+    <string name="conversion_title">Live Rates</string>
+    <string name="search_hint">Search…</string>
+    <string name="update">Update</string>
+    <string name="updating">Updating…</string>
+    <string name="status_live">Live rates</string>
+    <string name="status_cached">Cached rates</string>
+    <string name="status_offline">Offline rates</string>
+    <string name="builtin_data">Built-in data</string>
+    <string name="calc_error">Error</string>
+    <string name="pin">Pin</string>
 </resources>
