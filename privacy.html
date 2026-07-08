@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 Privacy Policy - BBCalc</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <style>
+        :root {
+            --bg: #0e0d12; --surface: #1c1b1f; --text: #e6e1e5;
+            --muted: #938f99; --primary: #a8c7fa; --outline: rgba(202,196,208,0.13);
+            color-scheme: dark;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f3f3fa; --surface: #ffffff; --text: #1c1b1f;
+                --muted: #49454f; --primary: #1a73e8; --outline: rgba(73,69,79,0.14);
+                color-scheme: light;
+            }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg); color: var(--text);
+            line-height: 1.75; padding: 24px 16px 48px;
+        }
+        .card {
+            max-width: 720px; margin: 0 auto; background: var(--surface);
+            border: 1px solid var(--outline); border-radius: 20px; padding: 32px 28px;
+        }
+        h1 { font-size: 24px; margin-bottom: 4px; }
+        .updated { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+        h2 { font-size: 17px; margin: 26px 0 8px; }
+        p, li { font-size: 15px; color: var(--text); }
+        ul { padding-left: 22px; margin: 6px 0; }
+        .muted { color: var(--muted); }
+        a { color: var(--primary); }
+        .divider { height: 1px; background: var(--outline); margin: 36px 0; }
+        .back {
+            display: inline-block; margin-bottom: 20px; text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <a class="back" href="./">← 返回 BBCalc / Back to BBCalc</a>
+
+        <h1>隐私政策</h1>
+        <p class="updated">最后更新：2026 年 7 月 8 日</p>
+
+        <p>BBCalc（波波汇率计算器）是一款汇率计算工具。我们尊重并保护你的隐私，本政策说明应用收集哪些信息、如何使用以及你拥有的权利。</p>
+
+        <h2>我们收集的信息</h2>
+        <ul>
+            <li><strong>不登录即可完整使用</strong>：所有计算和配置（货币选择、排序、置顶、主题、语言）默认仅保存在你设备本地（localStorage），不会上传。</li>
+            <li><strong>可选的 Google 登录</strong>：若你选择登录以同步配置，我们通过 Google Firebase 获取你的昵称、邮箱和头像，仅用于账号标识与显示。</li>
+            <li><strong>云端同步的数据</strong>：登录后，你的应用配置（货币选择与排序、置顶列表、主题、语言、默认基准货币）保存在 Google Firestore，仅与你的账号关联。</li>
+        </ul>
+
+        <h2>我们不收集的信息</h2>
+        <ul>
+            <li>不收集位置信息、通讯录、设备标识符；</li>
+            <li>不接入任何广告 SDK，无广告、无跟踪；</li>
+            <li>你输入的计算金额不会被上传或记录；</li>
+            <li>不向任何第三方出售或共享你的数据。</li>
+        </ul>
+
+        <h2>第三方服务</h2>
+        <ul>
+            <li><strong>Google Firebase</strong>（登录与配置同步），适用 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google 隐私政策</a>；</li>
+            <li><strong>汇率数据源</strong>（Frankfurter/ECB、Currency API）：仅获取公开汇率数据，请求中不包含你的任何个人信息。</li>
+        </ul>
+
+        <h2>数据删除</h2>
+        <p>你可以随时在应用的「设置 → 账号同步」中点击「删除账号」，这将永久删除你的账号及云端保存的全部配置。也可发邮件至 <a href="mailto:maxbobo007@gmail.com">maxbobo007@gmail.com</a> 请求删除。</p>
+
+        <h2>联系我们</h2>
+        <p>如对本政策有任何疑问：<a href="mailto:maxbobo007@gmail.com">maxbobo007@gmail.com</a></p>
+
+        <div class="divider"></div>
+
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: July 8, 2026</p>
+
+        <p>BBCalc is a currency exchange calculator. We respect your privacy. This policy explains what the app collects, how it is used, and your rights.</p>
+
+        <h2>Information We Collect</h2>
+        <ul>
+            <li><strong>Full functionality without sign-in</strong>: all calculations and preferences (currency selection, order, pins, theme, language) are stored locally on your device (localStorage) by default and never uploaded.</li>
+            <li><strong>Optional Google Sign-In</strong>: if you sign in to sync settings, we receive your name, email and avatar via Google Firebase, used solely for account identification and display.</li>
+            <li><strong>Synced data</strong>: after sign-in, your app preferences (currency selection & order, pinned list, theme, language, default base currency) are stored in Google Firestore, tied only to your account.</li>
+        </ul>
+
+        <h2>What We Do NOT Collect</h2>
+        <ul>
+            <li>No location, contacts, or device identifiers;</li>
+            <li>No ad SDKs — no ads, no tracking;</li>
+            <li>Amounts you type are never uploaded or logged;</li>
+            <li>Your data is never sold or shared with third parties.</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <ul>
+            <li><strong>Google Firebase</strong> (sign-in and settings sync), governed by the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>;</li>
+            <li><strong>Exchange-rate providers</strong> (Frankfurter/ECB, Currency API): only public rate data is fetched; requests contain no personal information.</li>
+        </ul>
+
+        <h2>Data Deletion</h2>
+        <p>You can permanently delete your account and all synced settings at any time via “Settings → Account Sync → Delete Account” in the app, or by emailing <a href="mailto:maxbobo007@gmail.com">maxbobo007@gmail.com</a>.</p>
+
+        <h2>Contact</h2>
+        <p>Questions about this policy: <a href="mailto:maxbobo007@gmail.com">maxbobo007@gmail.com</a></p>
+    </div>
+</body>
+</html>

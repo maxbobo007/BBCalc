@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BBCalc">
-    <title>波波汇率计算器 v1.6.0 - BBCalc</title>
+    <title>波波汇率计算器 v1.7.0 - BBCalc</title>
     <style>
         /* ── 主题变量 ── */
         :root {
@@ -1016,7 +1016,7 @@
                 <div class="title">
                     波波汇率计算器
                     <span class="active-currency-badge" id="activeCurrencyBadge">CNY</span>
-                    <span class="version-badge">v1.6.0</span>
+                    <span class="version-badge">v1.7.0</span>
                 </div>
                 <button class="settings-btn" onclick="openSettings()">⚙️</button>
             </div>
@@ -1100,14 +1100,15 @@
                     </button>
                     <span id="signInDesc" style="color:var(--on-sv);font-size:12px;">登录后配置自动同步到云端</span>
                 </div>
-                <div id="authSignedIn" style="display:none;align-items:center;gap:12px;">
+                <div id="authSignedIn" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;">
                     <img id="userAvatar" src="" width="32" height="32" style="border-radius:50%;">
                     <div>
                         <div id="userName" style="font-size:14px;font-weight:600;color:var(--on-surface);"></div>
                         <div id="userEmail" style="font-size:12px;color:var(--on-sv);"></div>
                     </div>
-                    <button onclick="signOutUser()" id="signOutBtn" style="margin-left:auto;background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">退出登录</button>
+                    <button onclick="signOutUser()" id="signOutBtn" style="margin-left:auto;background:var(--surface-c);border:1px solid var(--outline-v);border-radius:10px;padding:8px 14px;color:var(--on-surface);font-size:13px;cursor:pointer;">退出登录</button>
                     <button onclick="forceSyncToCloud()" id="forceSyncBtn" style="background:var(--primary-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-pc);font-size:13px;cursor:pointer;">↑ 上传本地配置</button>
+                    <button onclick="deleteAccount()" id="deleteAccountBtn" style="background:var(--err-c);border:none;border-radius:10px;padding:8px 14px;color:var(--on-err);font-size:13px;cursor:pointer;">删除账号</button>
                 </div>
             </div>
 
@@ -1143,7 +1144,7 @@
             <input type="text" id="currencySearchBox" placeholder="🔍 搜索货币..." onkeyup="filterCurrenciesInSettings()" style="background: var(--surface-c); border: 1px solid var(--outline-v); border-radius: 10px; padding: 12px 16px; color: var(--on-surface); font-size: 15px; width: 100%; margin-bottom: 12px; outline: none;">
             <div class="currency-grid-settings" id="currencyGridSettings"></div>
 
-            <div class="settings-footer">BBCalc v1.6.0</div>
+            <div class="settings-footer">BBCalc v1.7.0 · <a id="privacyLink" href="privacy.html" style="color:inherit;">隐私政策</a></div>
         </div>
     </div>
 
@@ -1161,12 +1162,12 @@
         
         // 语言包
         const i18n = {
-            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', apiDesc: '选择汇率API提供商，系统会按优先级依次尝试', save: '保存', searchMain: '搜索货币...', searchSettings: '🔍 搜索货币...', stAccount: '账号同步', stTheme: '主题外观', stLang: '语言设置', stDefault: '默认基准货币', signIn: '使用 Google 账号登录', signInDesc: '登录后配置自动同步到云端', signOut: '退出登录', themeLight: '☀️ 浅色', themeAuto: '💻 跟随设备', themeDark: '🌙 深色', err: '错误', statusLive: '实时汇率', statusOffline: '离线汇率', statusCached: '缓存汇率', source: '数据来源', builtin: '内置数据' },
-            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'Exchange Rate APIs', apiDesc: 'APIs are tried in priority order', save: 'Save', searchMain: 'Search currencies...', searchSettings: '🔍 Search currencies...', stAccount: 'Account Sync', stTheme: 'Appearance', stLang: 'Language', stDefault: 'Default Base Currency', signIn: 'Sign in with Google', signInDesc: 'Settings sync to cloud after sign-in', signOut: 'Sign Out', themeLight: '☀️ Light', themeAuto: '💻 Auto', themeDark: '🌙 Dark', err: 'Error', statusLive: 'Live rates', statusOffline: 'Offline rates', statusCached: 'Cached rates', source: 'Source', builtin: 'Built-in data' },
-            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuentes de Tasa', apiDesc: 'Las APIs se prueban en orden de prioridad', save: 'Guardar', searchMain: 'Buscar moneda...', searchSettings: '🔍 Buscar moneda...', stAccount: 'Sincronización', stTheme: 'Apariencia', stLang: 'Idioma', stDefault: 'Moneda Base por Defecto', signIn: 'Iniciar sesión con Google', signInDesc: 'La configuración se sincroniza tras iniciar sesión', signOut: 'Cerrar sesión', themeLight: '☀️ Claro', themeAuto: '💻 Auto', themeDark: '🌙 Oscuro', err: 'Error', statusLive: 'Tasas en vivo', statusOffline: 'Tasas sin conexión', statusCached: 'Tasas en caché', source: 'Fuente', builtin: 'Datos integrados' },
-            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Sources de Taux', apiDesc: 'Les APIs sont essayées par ordre de priorité', save: 'Sauvegarder', searchMain: 'Rechercher...', searchSettings: '🔍 Rechercher...', stAccount: 'Synchronisation', stTheme: 'Apparence', stLang: 'Langue', stDefault: 'Devise de Base par Défaut', signIn: 'Se connecter avec Google', signInDesc: 'Les paramètres se synchronisent après connexion', signOut: 'Se déconnecter', themeLight: '☀️ Clair', themeAuto: '💻 Auto', themeDark: '🌙 Sombre', err: 'Erreur', statusLive: 'Taux en direct', statusOffline: 'Taux hors ligne', statusCached: 'Taux en cache', source: 'Source', builtin: 'Données intégrées' },
-            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: '為替レートAPI', apiDesc: 'APIは優先順位に従って試行されます', save: '保存', searchMain: '通貨を検索...', searchSettings: '🔍 通貨を検索...', stAccount: 'アカウント同期', stTheme: '外観', stLang: '言語', stDefault: 'デフォルト基準通貨', signIn: 'Googleでサインイン', signInDesc: 'サインイン後に設定がクラウドに同期されます', signOut: 'サインアウト', themeLight: '☀️ ライト', themeAuto: '💻 自動', themeDark: '🌙 ダーク', err: 'エラー', statusLive: 'リアルタイムレート', statusOffline: 'オフラインレート', statusCached: 'キャッシュレート', source: 'データ元', builtin: '内蔵データ' },
-            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'Wechselkurs-APIs', apiDesc: 'APIs werden der Priorität nach versucht', save: 'Speichern', searchMain: 'Währung suchen...', searchSettings: '🔍 Währung suchen...', stAccount: 'Konto-Synchronisation', stTheme: 'Erscheinungsbild', stLang: 'Sprache', stDefault: 'Standard-Basiswährung', signIn: 'Mit Google anmelden', signInDesc: 'Einstellungen nach Anmeldung in der Cloud gespeichert', signOut: 'Abmelden', themeLight: '☀️ Hell', themeAuto: '💻 Automatisch', themeDark: '🌙 Dunkel', err: 'Fehler', statusLive: 'Live-Kurse', statusOffline: 'Offline-Kurse', statusCached: 'Kurse aus Cache', source: 'Quelle', builtin: 'Integrierte Daten' }
+            zh: { calc: '计算器', base: '基准货币', update: '手动更新', loading: '更新中...', conversion: '实时汇率换算', settings: '货币设置', selectCur: '选择要显示的货币', apiSource: '汇率数据源', apiDesc: '选择汇率API提供商，系统会按优先级依次尝试', save: '保存', searchMain: '搜索货币...', searchSettings: '🔍 搜索货币...', stAccount: '账号同步', stTheme: '主题外观', stLang: '语言设置', stDefault: '默认基准货币', signIn: '使用 Google 账号登录', signInDesc: '登录后配置自动同步到云端', signOut: '退出登录', themeLight: '☀️ 浅色', themeAuto: '💻 跟随设备', themeDark: '🌙 深色', err: '错误', statusLive: '实时汇率', statusOffline: '离线汇率', statusCached: '缓存汇率', source: '数据来源', builtin: '内置数据', privacy: '隐私政策', deleteAccount: '删除账号', deleteConfirm: '确定要永久删除账号吗？云端保存的配置将被清除，此操作不可恢复。', deleteDone: '账号已删除', deleteFail: '删除失败，请重新登录后再试' },
+            en: { calc: 'Calculator', base: 'Base Currency', update: 'Update', loading: 'Updating...', conversion: 'Real-time Conversion', settings: 'Currency Settings', selectCur: 'Select Currencies', apiSource: 'Exchange Rate APIs', apiDesc: 'APIs are tried in priority order', save: 'Save', searchMain: 'Search currencies...', searchSettings: '🔍 Search currencies...', stAccount: 'Account Sync', stTheme: 'Appearance', stLang: 'Language', stDefault: 'Default Base Currency', signIn: 'Sign in with Google', signInDesc: 'Settings sync to cloud after sign-in', signOut: 'Sign Out', themeLight: '☀️ Light', themeAuto: '💻 Auto', themeDark: '🌙 Dark', err: 'Error', statusLive: 'Live rates', statusOffline: 'Offline rates', statusCached: 'Cached rates', source: 'Source', builtin: 'Built-in data', privacy: 'Privacy Policy', deleteAccount: 'Delete Account', deleteConfirm: 'Permanently delete your account? Your cloud-saved settings will be erased. This cannot be undone.', deleteDone: 'Account deleted', deleteFail: 'Deletion failed. Please sign in again and retry.' },
+            es: { calc: 'Calculadora', base: 'Moneda Base', update: 'Actualizar', loading: 'Actualizando...', conversion: 'Conversión en Tiempo Real', settings: 'Configuración', selectCur: 'Seleccionar Monedas', apiSource: 'Fuentes de Tasa', apiDesc: 'Las APIs se prueban en orden de prioridad', save: 'Guardar', searchMain: 'Buscar moneda...', searchSettings: '🔍 Buscar moneda...', stAccount: 'Sincronización', stTheme: 'Apariencia', stLang: 'Idioma', stDefault: 'Moneda Base por Defecto', signIn: 'Iniciar sesión con Google', signInDesc: 'La configuración se sincroniza tras iniciar sesión', signOut: 'Cerrar sesión', themeLight: '☀️ Claro', themeAuto: '💻 Auto', themeDark: '🌙 Oscuro', err: 'Error', statusLive: 'Tasas en vivo', statusOffline: 'Tasas sin conexión', statusCached: 'Tasas en caché', source: 'Fuente', builtin: 'Datos integrados', privacy: 'Política de privacidad', deleteAccount: 'Eliminar cuenta', deleteConfirm: '¿Eliminar tu cuenta permanentemente? Se borrará la configuración guardada en la nube. Esta acción es irreversible.', deleteDone: 'Cuenta eliminada', deleteFail: 'Error al eliminar. Inicia sesión de nuevo e inténtalo otra vez.' },
+            fr: { calc: 'Calculatrice', base: 'Devise de Base', update: 'Mettre à Jour', loading: 'Mise à jour...', conversion: 'Conversion Temps Réel', settings: 'Paramètres', selectCur: 'Sélectionner Devises', apiSource: 'Sources de Taux', apiDesc: 'Les APIs sont essayées par ordre de priorité', save: 'Sauvegarder', searchMain: 'Rechercher...', searchSettings: '🔍 Rechercher...', stAccount: 'Synchronisation', stTheme: 'Apparence', stLang: 'Langue', stDefault: 'Devise de Base par Défaut', signIn: 'Se connecter avec Google', signInDesc: 'Les paramètres se synchronisent après connexion', signOut: 'Se déconnecter', themeLight: '☀️ Clair', themeAuto: '💻 Auto', themeDark: '🌙 Sombre', err: 'Erreur', statusLive: 'Taux en direct', statusOffline: 'Taux hors ligne', statusCached: 'Taux en cache', source: 'Source', builtin: 'Données intégrées', privacy: 'Politique de confidentialité', deleteAccount: 'Supprimer le compte', deleteConfirm: 'Supprimer définitivement votre compte ? Vos paramètres cloud seront effacés. Action irréversible.', deleteDone: 'Compte supprimé', deleteFail: 'Échec de la suppression. Reconnectez-vous et réessayez.' },
+            ja: { calc: '電卓', base: '基準通貨', update: '更新', loading: '更新中...', conversion: 'リアルタイム換算', settings: '設定', selectCur: '通貨を選択', apiSource: '為替レートAPI', apiDesc: 'APIは優先順位に従って試行されます', save: '保存', searchMain: '通貨を検索...', searchSettings: '🔍 通貨を検索...', stAccount: 'アカウント同期', stTheme: '外観', stLang: '言語', stDefault: 'デフォルト基準通貨', signIn: 'Googleでサインイン', signInDesc: 'サインイン後に設定がクラウドに同期されます', signOut: 'サインアウト', themeLight: '☀️ ライト', themeAuto: '💻 自動', themeDark: '🌙 ダーク', err: 'エラー', statusLive: 'リアルタイムレート', statusOffline: 'オフラインレート', statusCached: 'キャッシュレート', source: 'データ元', builtin: '内蔵データ', privacy: 'プライバシーポリシー', deleteAccount: 'アカウント削除', deleteConfirm: 'アカウントを完全に削除しますか？クラウドに保存された設定も消去されます。元に戻せません。', deleteDone: 'アカウントを削除しました', deleteFail: '削除に失敗しました。再ログイン後にお試しください。' },
+            de: { calc: 'Rechner', base: 'Basiswährung', update: 'Aktualisieren', loading: 'Aktualisierung...', conversion: 'Echtzeit-Umrechnung', settings: 'Einstellungen', selectCur: 'Währungen wählen', apiSource: 'Wechselkurs-APIs', apiDesc: 'APIs werden der Priorität nach versucht', save: 'Speichern', searchMain: 'Währung suchen...', searchSettings: '🔍 Währung suchen...', stAccount: 'Konto-Synchronisation', stTheme: 'Erscheinungsbild', stLang: 'Sprache', stDefault: 'Standard-Basiswährung', signIn: 'Mit Google anmelden', signInDesc: 'Einstellungen nach Anmeldung in der Cloud gespeichert', signOut: 'Abmelden', themeLight: '☀️ Hell', themeAuto: '💻 Automatisch', themeDark: '🌙 Dunkel', err: 'Fehler', statusLive: 'Live-Kurse', statusOffline: 'Offline-Kurse', statusCached: 'Kurse aus Cache', source: 'Quelle', builtin: 'Integrierte Daten', privacy: 'Datenschutzerklärung', deleteAccount: 'Konto löschen', deleteConfirm: 'Konto dauerhaft löschen? In der Cloud gespeicherte Einstellungen werden gelöscht. Nicht rückgängig machbar.', deleteDone: 'Konto gelöscht', deleteFail: 'Löschen fehlgeschlagen. Bitte erneut anmelden und wiederholen.' }
         };
         
         function t(key) { return i18n[currentLang][key] || i18n.zh[key]; }
@@ -1237,6 +1238,8 @@
             if (el('signInBtnText')) el('signInBtnText').textContent = t('signIn');
             if (el('signInDesc'))    el('signInDesc').textContent    = t('signInDesc');
             if (el('signOutBtn'))       el('signOutBtn').textContent       = t('signOut');
+            if (el('deleteAccountBtn')) el('deleteAccountBtn').textContent = t('deleteAccount');
+            if (el('privacyLink'))      el('privacyLink').textContent      = t('privacy');
             if (el('theme-btn-light')) el('theme-btn-light').textContent  = t('themeLight');
             if (el('theme-btn-auto'))  el('theme-btn-auto').textContent   = t('themeAuto');
             if (el('theme-btn-dark'))  el('theme-btn-dark').textContent   = t('themeDark');
@@ -2364,7 +2367,7 @@
             });
         }
 
-        console.log('=== 波波汇率计算器 BBCalc v1.6.0 ===');
+        console.log('=== 波波汇率计算器 BBCalc v1.7.0 ===');
     </script>
 
     <!-- Firebase SDK -->
@@ -2372,7 +2375,9 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc }
+        import { deleteUser, reauthenticateWithPopup }
+            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, deleteDoc }
             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
         const firebaseConfig = {
@@ -2481,6 +2486,36 @@
 
         window.signOutUser = async function() {
             await signOut(auth);
+        };
+
+        // 删除账号：清除云端配置 + 注销 Firebase 账号（App Store 合规要求）
+        async function wipeAndDelete() {
+            await deleteDoc(doc(db, 'users', currentUser.uid, 'config', 'settings'));
+            await deleteUser(auth.currentUser);
+        }
+
+        window.deleteAccount = async function() {
+            if (!currentUser) return;
+            if (!confirm(t('deleteConfirm'))) return;
+            try {
+                await wipeAndDelete();
+                alert(t('deleteDone'));
+            } catch (e) {
+                // 登录太久后 Firebase 要求重新认证才能注销
+                if (e.code === 'auth/requires-recent-login') {
+                    try {
+                        await reauthenticateWithPopup(auth.currentUser, provider);
+                        await wipeAndDelete();
+                        alert(t('deleteDone'));
+                    } catch (e2) {
+                        console.warn('删除账号失败', e2);
+                        alert(t('deleteFail'));
+                    }
+                } else {
+                    console.warn('删除账号失败', e);
+                    alert(t('deleteFail'));
+                }
+            }
         };
     </script>
 </body>
