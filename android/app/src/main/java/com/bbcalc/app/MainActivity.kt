@@ -1,9 +1,13 @@
 package com.bbcalc.app
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -37,6 +41,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +57,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -107,10 +117,59 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val palette = if (isSystemInDarkTheme()) DarkPalette else LightPalette
-            CompositionLocalProvider(LocalPalette provides palette) {
+            val vm: AppViewModel = viewModel()
+            val st by vm.state.collectAsState()
+            val dark = when (st.themeMode) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemInDarkTheme()
+            }
+            var showSettings by rememberSaveable { mutableStateOf(false) }
+
+            val signInLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) { res ->
+                try {
+                    val account = GoogleSignIn.getSignedInAccountFromIntent(res.data)
+                        .getResult(ApiException::class.java)
+                    val token = account.idToken
+                    if (token != null) vm.signInWithGoogleToken(token)
+                    else Toast.makeText(this, R.string.sign_in_failed, Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, R.string.sign_in_failed, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            CompositionLocalProvider(LocalPalette provides (if (dark) DarkPalette else LightPalette)) {
                 MaterialTheme {
-                    MainScreen()
+                    if (showSettings) {
+                        BackHandler { showSettings = false }
+                        SettingsScreen(
+                            st = st,
+                            vm = vm,
+                            onClose = { showSettings = false },
+                            onSignIn = {
+                                val webId = vm.webClientId
+                                if (!vm.authAvailable || webId == null) {
+                                    Toast.makeText(this, R.string.sign_in_unavailable, Toast.LENGTH_LONG).show()
+                                } else {
+                                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                        .requestIdToken(webId)
+                                        .requestEmail()
+                                        .build()
+                                    signInLauncher.launch(GoogleSignIn.getClient(this, gso).signInIntent)
+                                }
+                            },
+                            onSignOut = {
+                                vm.signOut()
+                                // 同时登出 Google 客户端，下次登录可重新选择账号
+                                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+                                GoogleSignIn.getClient(this, gso).signOut()
+                            },
+                        )
+                    } else {
+                        MainScreen(vm, st, onOpenSettings = { showSettings = true })
+                    }
                 }
             }
         }
@@ -118,9 +177,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(vm: AppViewModel = viewModel()) {
+fun MainScreen(vm: AppViewModel, st: UiState, onOpenSettings: () -> Unit) {
     val p = LocalPalette.current
-    val st by vm.state.collectAsState()
 
     BoxWithConstraints(
         Modifier
@@ -132,7 +190,7 @@ fun MainScreen(vm: AppViewModel = viewModel()) {
         val landscape = maxWidth > maxHeight
         if (landscape) {
             Row(Modifier.fillMaxSize()) {
-                CalculatorPanel(st, vm, Modifier.weight(46f))
+                CalculatorPanel(st, vm, onOpenSettings, Modifier.weight(46f))
                 Spacer(Modifier.width(10.dp))
                 RatesPanel(st, vm, Modifier.weight(54f))
             }
@@ -140,7 +198,7 @@ fun MainScreen(vm: AppViewModel = viewModel()) {
             Column(Modifier.fillMaxSize()) {
                 RatesPanel(st, vm, Modifier.weight(1f))
                 Spacer(Modifier.height(10.dp))
-                CalculatorPanel(st, vm, Modifier.fillMaxWidth())
+                CalculatorPanel(st, vm, onOpenSettings, Modifier.fillMaxWidth())
             }
         }
     }
@@ -155,7 +213,7 @@ fun RatesPanel(st: UiState, vm: AppViewModel, modifier: Modifier = Modifier) {
 
     val q = st.search.trim().lowercase()
     val filtered = Currencies.all
-        .filter { it.code != st.baseCurrency }
+        .filter { it.code != st.baseCurrency && it.code in st.displayCurrencies }
         .filter {
             q.isEmpty() || it.code.lowercase().contains(q) ||
                 it.zh.contains(q) || it.en.lowercase().contains(q)
@@ -273,7 +331,7 @@ fun CurrencyCard(cur: CurrencyInfo, st: UiState, vm: AppViewModel, chinese: Bool
 // ── 计算器面板 ──
 
 @Composable
-fun CalculatorPanel(st: UiState, vm: AppViewModel, modifier: Modifier = Modifier) {
+fun CalculatorPanel(st: UiState, vm: AppViewModel, onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     val p = LocalPalette.current
 
     Surface(
@@ -282,7 +340,7 @@ fun CalculatorPanel(st: UiState, vm: AppViewModel, modifier: Modifier = Modifier
         color = p.surface,
     ) {
         Column(Modifier.padding(14.dp).verticalScroll(rememberScrollState())) {
-            // 标题 + 基准货币徽标
+            // 标题 + 基准货币徽标 + 设置入口
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     stringResource(R.string.title),
@@ -294,6 +352,16 @@ fun CalculatorPanel(st: UiState, vm: AppViewModel, modifier: Modifier = Modifier
                         st.baseCurrency,
                         color = p.onPc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Surface(
+                    shape = RoundedCornerShape(50), color = p.surfaceC,
+                    modifier = Modifier.clickable(onClick = onOpenSettings),
+                ) {
+                    Text(
+                        "⚙️", fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     )
                 }
             }

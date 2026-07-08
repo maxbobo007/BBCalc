@@ -4,6 +4,11 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
+// google-services.json 存在时才启用 Firebase 配置插件（缺失时登录功能自动隐藏，构建不受影响）
+if (project.file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
 android {
     namespace 'com.bbcalc.app'
     compileSdk 35
@@ -12,8 +17,8 @@ android {
         applicationId "com.bbcalc.app"
         minSdk 24
         targetSdk 35
-        versionCode 2
-        versionName "1.8.0"
+        versionCode 3
+        versionName "1.9.0"
     }
 
     signingConfigs {
@@ -56,4 +61,10 @@ dependencies {
     implementation 'androidx.activity:activity-compose:1.9.2'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+
+    // Google 登录 + Firebase 云同步（与网页版共用同一 Firestore 文档）
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
+    implementation platform('com.google.firebase:firebase-bom:33.4.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
 }
