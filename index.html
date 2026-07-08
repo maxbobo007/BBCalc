@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>波波汇率计算器 v1.4.3 - BBCalc</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" id="metaThemeColor" content="#0e0d12">
+    <title>波波汇率计算器 v1.5.0 - BBCalc</title>
     <style>
         /* ── 主题变量 ── */
         :root {
@@ -44,10 +45,17 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* 触屏：消除 300ms 点击延迟和双击缩放、去掉点击高亮 */
+        button, select, input {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
             background: var(--bg);
             min-height: 100vh;
+            min-height: 100dvh; /* 手机浏览器地址栏收起/展开时高度准确 */
             color: var(--on-surface);
             padding: 32px;
         }
@@ -59,6 +67,7 @@
             grid-template-columns: 420px 1fr;
             gap: 20px;
             height: calc(100vh - 64px);
+            height: calc(100dvh - 64px);
         }
 
         .calculator-panel {
@@ -345,6 +354,9 @@
             justify-content: space-between;
             align-items: center;
             user-select: none;
+            touch-action: pan-y; /* 保留纵向滚动，拖拽排序由长按触发 */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
 
         .currency-card.dragging {
@@ -607,29 +619,129 @@
             .container { grid-template-columns: 380px 1fr; }
         }
 
+        /* ── 移动端（竖屏手机 / 窄屏）── */
         @media (max-width: 900px) {
-            body { padding: 16px; }
-            .container {
-                grid-template-columns: 1fr;
-                grid-template-rows: minmax(300px, 40vh) 1fr;
-                height: calc(100vh - 32px);
-                gap: 14px;
+            body {
+                padding: 10px;
+                /* 刘海屏 / 手势条安全区 */
+                padding: max(10px, env(safe-area-inset-top))
+                         max(10px, env(safe-area-inset-right))
+                         max(10px, env(safe-area-inset-bottom))
+                         max(10px, env(safe-area-inset-left));
             }
-            .conversion-panel { order: -1; height: 100%; overflow: hidden; }
-            .conversion-grid { max-height: calc(100% - 80px); }
-            .calculator-panel { max-width: 100%; height: 100%; padding: 18px; }
-            .title { font-size: 20px; }
-            .calc-button { min-height: 52px; font-size: 20px; }
-            .calc-button.function { font-size: 17px; }
-            .calc-button.operator { font-size: 24px; }
-            .result { font-size: 40px; }
+
+            .container {
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 20px);
+                height: calc(100dvh - 20px);
+                min-height: 540px; /* 屏幕太矮时允许整页滚动，避免内容被挤压 */
+                gap: 10px;
+            }
+
+            /* 汇率列表在上（占据剩余空间、内部滚动），计算器在下（紧凑、完整可见） */
+            .conversion-panel {
+                order: -1;
+                flex: 1 1 0;
+                min-height: 148px;
+                padding: 14px 14px 10px;
+                border-radius: 20px;
+            }
+
+            .conversion-header {
+                gap: 10px;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+            }
+
+            .conversion-title { font-size: 15px; white-space: nowrap; }
+
+            /* ≥16px 字号防止 iOS 聚焦输入框时自动放大页面 */
+            .search-box {
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                max-width: 230px;
+                font-size: 16px;
+                padding: 8px 14px;
+            }
+
+            .conversion-grid {
+                flex: 1 1 auto;
+                min-height: 0;
+                gap: 7px;
+                padding-right: 3px;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .currency-card { padding: 10px 14px; border-radius: 14px; }
+            .currency-code { font-size: 15px; }
+            .currency-value { font-size: 18px; }
+            .pin-btn { font-size: 15px; padding: 6px; }
+
+            .calculator-panel {
+                flex: 0 0 auto;
+                padding: 14px;
+                gap: 9px;
+                border-radius: 20px;
+            }
+
+            .title { font-size: 17px; gap: 8px; }
+            .version-badge { display: none; }
+            .active-currency-badge { font-size: 12px; padding: 3px 10px; }
+            .settings-btn { width: 38px; height: 38px; font-size: 15px; }
+
+            .currency-selector { padding: 7px 14px; border-radius: 12px; }
+            .currency-selector select { font-size: 16px; }
+
+            .display { min-height: 70px; padding: 10px 16px; border-radius: 14px; }
+            .expression { font-size: 13px; margin-bottom: 4px; }
+            .result { font-size: 34px; letter-spacing: -1px; }
+            .cursor { height: 28px; }
+
+            .calculator-buttons {
+                flex: 0 0 auto;
+                gap: 7px;
+                grid-auto-rows: minmax(42px, 1fr);
+            }
+
+            .calc-button { height: auto; min-height: 42px; font-size: 20px; border-radius: 14px; }
+            .calc-button.function { font-size: 16px; }
+            .calc-button.operator { font-size: 22px; }
+
+            .rate-info { padding-top: 6px; font-size: 10px; line-height: 1.45; }
+            .update-btn { margin-top: 2px; padding: 3px 11px; font-size: 11px; }
         }
 
-        @media (max-width: 600px) {
-            .container { grid-template-rows: minmax(250px, 35vh) 1fr; }
-            .calc-button { min-height: 46px; font-size: 19px; }
-            .result { font-size: 34px; }
-            .conversion-title { font-size: 16px; }
+        /* 小屏手机进一步收紧 */
+        @media (max-width: 380px) {
+            .title { font-size: 15px; }
+            .result { font-size: 30px; }
+            .calc-button { min-height: 40px; font-size: 19px; }
+            .currency-value { font-size: 16px; }
+            .search-box { max-width: 170px; }
+        }
+
+        /* 横屏手机：恢复左右双栏，避免键盘被压扁 */
+        @media (max-width: 1000px) and (max-height: 520px) {
+            .container {
+                display: flex;
+                flex-direction: row;
+                min-height: 0;
+                height: calc(100vh - 20px);
+                height: calc(100dvh - 20px);
+                gap: 10px;
+            }
+            .calculator-panel { flex: 0 0 46%; padding: 14px; gap: 8px; }
+            .conversion-panel { order: 2; flex: 1 1 auto; min-height: 0; padding: 14px; }
+            .rate-info { display: none; }
+            .display { min-height: 60px; padding: 8px 14px; }
+            .result { font-size: 28px; }
+            .calculator-buttons { flex: 1 1 auto; min-height: 0; grid-auto-rows: minmax(34px, 1fr); gap: 6px; }
+            .calc-button { height: auto; min-height: 34px; font-size: 17px; }
+            .title { font-size: 15px; }
+            .version-badge { display: none; }
         }
     </style>
     <style>
@@ -745,6 +857,61 @@
             color: var(--on-pc);
             border-color: var(--primary);
         }
+
+        /* ── 设置面板：手机上改为底部抽屉 ── */
+        @keyframes sheetSlideUp {
+            from { transform: translateY(55%); opacity: 0.4; }
+            to   { transform: translateY(0);   opacity: 1;   }
+        }
+
+        @media (max-width: 600px) {
+            .settings-overlay { align-items: flex-end; }
+            .settings-panel {
+                width: 100%;
+                max-width: 100%;
+                max-height: 88vh;
+                max-height: 88dvh;
+                border-radius: 24px 24px 0 0;
+                border-bottom: none;
+                padding: 22px 18px;
+                padding-bottom: max(22px, env(safe-area-inset-bottom));
+            }
+            .settings-overlay.active .settings-panel {
+                animation: sheetSlideUp 0.32s cubic-bezier(0.2,0,0,1);
+            }
+            .settings-header { margin-bottom: 18px; padding-bottom: 14px; }
+            .settings-title { font-size: 20px; }
+            .close-btn { width: 38px; height: 38px; }
+            .section-title { margin: 20px 0 10px; }
+            .currency-grid-settings {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 7px;
+            }
+            /* 覆盖行内样式：下拉框占满整行，16px 防 iOS 聚焦缩放 */
+            #langSelect, #defaultCurrencySelect { width: 100% !important; font-size: 16px !important; }
+            #currencySearchBox { font-size: 16px !important; }
+            #authSignedOut { flex-wrap: wrap; }
+        }
+
+        /* ── 触屏设备：中和会"卡住"的 hover 效果 ── */
+        @media (hover: none) {
+            .settings-btn:hover { background: var(--surface-c); transform: none; }
+            .calc-button:hover { background: var(--surface-c); box-shadow: none; }
+            .calc-button.function:hover { background: var(--surface-ch); }
+            .calc-button.operator:hover { background: var(--primary-c); filter: none; box-shadow: none; }
+            .calc-button.equals:hover { background: var(--primary); filter: none; box-shadow: none; }
+            .calc-button.backspace:hover { background: var(--err-c); filter: none; box-shadow: none; }
+            .currency-card:hover { background: var(--surface-c); border-color: var(--outline); transform: none; }
+            .currency-card.pinned-card:hover,
+            .currency-card.active:hover { background: var(--primary-c); border-color: var(--primary); }
+            .currency-item:hover { background: var(--surface-c); }
+            /* 触屏没有悬停显现，直接提高置顶按钮可见度 */
+            .pin-btn { opacity: 0.45; }
+            .pin-btn:hover { opacity: 0.45; background: none; }
+            .pin-btn.pinned, .pin-btn.pinned:hover { opacity: 1; background: var(--primary-c); }
+            .update-btn:hover { background: none; border-color: var(--primary-c); }
+            .close-btn:hover { background: var(--surface-c); }
+        }
     </style>
 </head>
 <body>
@@ -755,7 +922,7 @@
                 <div class="title">
                     波波汇率计算器
                     <span class="active-currency-badge" id="activeCurrencyBadge">CNY</span>
-                    <span class="version-badge">v1.4.3</span>
+                    <span class="version-badge">v1.5.0</span>
                 </div>
                 <button class="settings-btn" onclick="openSettings()">⚙️</button>
             </div>
@@ -912,6 +1079,8 @@
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            const metaTheme = document.getElementById('metaThemeColor');
+            if (metaTheme) metaTheme.content = isDark ? '#0e0d12' : '#f3f3fa';
             document.querySelectorAll('.theme-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
@@ -1468,10 +1637,18 @@
 
         // ── 拖拽排序（pointer events + FLIP 让位动画）──
         let dragState = null;
+        let lastDragEndAt = 0;
 
         function addDragListeners(card) {
             card.addEventListener('pointerdown', onDragStart);
+            // 长按拖拽时阻止系统长按菜单（Android）
+            card.addEventListener('contextmenu', e => { if (dragState) e.preventDefault(); });
         }
+
+        // 拖拽激活后阻止页面滚动（必须 passive:false 才能 preventDefault）
+        document.addEventListener('touchmove', e => {
+            if (dragState && dragState.dragging) e.preventDefault();
+        }, { passive: false });
 
         function flipCards(grid, fn) {
             // FLIP: 记录位置 → 执行 DOM 变化 → 动画回到新位置
@@ -1510,7 +1687,19 @@
                 overCard: null, rafId: null,
                 lastX: e.clientX, lastY: e.clientY,
                 dragging: false,
+                isTouch: e.pointerType === 'touch',
+                holdTimer: null,
             };
+
+            // 触屏：长按 300ms 才进入拖拽，短滑视为滚动列表
+            if (dragState.isTouch) {
+                dragState.holdTimer = setTimeout(() => {
+                    if (!dragState || dragState.card !== card) return;
+                    activateDrag();
+                    if (navigator.vibrate) navigator.vibrate(15);
+                    if (!dragState.rafId) dragState.rafId = requestAnimationFrame(rafDrag);
+                }, 300);
+            }
 
             card.setPointerCapture(e.pointerId);
             card.addEventListener('pointermove', onDragMove);
@@ -1549,6 +1738,14 @@
             if (!dragState.dragging) {
                 const dx = e.clientX - dragState.startX;
                 const dy = e.clientY - dragState.startY;
+                if (dragState.isTouch) {
+                    // 长按未完成就明显移动 → 是滚动手势，取消长按拖拽
+                    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+                        clearTimeout(dragState.holdTimer);
+                        dragState.holdTimer = null;
+                    }
+                    return;
+                }
                 if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
                 activateDrag();
             }
@@ -1582,6 +1779,7 @@
         function onDragEnd(e) {
             if (!dragState) return;
             if (dragState.rafId) cancelAnimationFrame(dragState.rafId);
+            if (dragState.holdTimer) clearTimeout(dragState.holdTimer);
             const { card, ghost, currency, placeholder, grid, dragging } = dragState;
 
             card.removeEventListener('pointermove', onDragMove);
@@ -1591,6 +1789,9 @@
 
             // 没有真正拖拽（只是点击），直接清理退出，让 click 事件正常触发
             if (!dragging) return;
+
+            // 记录拖拽结束时间，拦截随后派发的 click 造成的误切换
+            lastDragEndAt = Date.now();
 
             const gridChildren = [...grid.children];
             const placeholderIdx = gridChildren.indexOf(placeholder);
@@ -1638,6 +1839,8 @@
         }
 
         function switchToConvertedCurrency(currency, value) {
+            // 拖拽刚结束时浏览器可能补发 click，忽略之
+            if (Date.now() - lastDragEndAt < 350) return;
             const oldBase = document.getElementById('baseCurrency').value;
             if (currency === oldBase) return;
 
@@ -1982,7 +2185,7 @@
             badge.addEventListener('animationend', () => badge.classList.remove('swapping'), { once: true });
         }
 
-        console.log('=== 波波汇率计算器 BBCalc v1.4.3 ===');
+        console.log('=== 波波汇率计算器 BBCalc v1.5.0 ===');
     </script>
 
     <!-- Firebase SDK -->
