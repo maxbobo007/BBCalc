@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.bbcalc.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.bbcalc.app"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.7.0"
+    }
+
+    signingConfigs {
+        // 演示密钥（随仓库公开，仅用于侧载分发）。
+        // 上架 Google Play 前必须换成私有密钥并移入 GitHub Secrets，见 android/README.md
+        demo {
+            storeFile file('../demo.keystore')
+            storePassword 'bbcalc-demo'
+            keyAlias 'bbcalc'
+            keyPassword 'bbcalc-demo'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.demo
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
