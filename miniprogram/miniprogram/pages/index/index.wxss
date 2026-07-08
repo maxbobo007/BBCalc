@@ -1,0 +1,236 @@
+.page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── 汇率面板 ── */
+.rates {
+  flex: 1;
+  min-height: 260rpx;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16rpx;
+}
+
+.rates-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 16rpx;
+}
+
+.rates-title {
+  color: var(--on-surface);
+  font-size: 28rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.search {
+  flex: 1;
+  margin-left: 20rpx;
+  background: var(--surface-c);
+  border-radius: 100rpx;
+  padding: 12rpx 26rpx;
+  font-size: 26rpx;
+  color: var(--on-surface);
+  max-width: 320rpx;
+}
+
+.search-ph {
+  color: var(--on-sv);
+}
+
+.grid-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.card {
+  position: relative;
+  width: 48.6%;
+  box-sizing: border-box;
+  background: var(--surface-c);
+  border-radius: 24rpx;
+  padding: 14rpx 18rpx 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.card.pinned {
+  background: var(--primary-c);
+}
+
+.card-top {
+  display: flex;
+  align-items: baseline;
+  padding-right: 36rpx;
+  overflow: hidden;
+}
+
+.card-code {
+  color: var(--on-surface);
+  font-size: 26rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.card-name {
+  color: var(--on-sv);
+  font-size: 18rpx;
+  margin-left: 8rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-value {
+  display: block;
+  color: var(--on-pc);
+  font-size: 30rpx;
+  font-weight: 600;
+  text-align: right;
+  margin-top: 4rpx;
+}
+
+.card-pin {
+  position: absolute;
+  top: 4rpx;
+  right: 8rpx;
+  font-size: 20rpx;
+  opacity: 0.35;
+  padding: 8rpx;
+}
+
+.card-pin.on {
+  opacity: 1;
+}
+
+/* ── 计算器面板 ── */
+.calc-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14rpx;
+}
+
+.calc-title {
+  color: var(--on-surface);
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.badge {
+  margin-left: 14rpx;
+  background: var(--primary-c);
+  color: var(--on-pc);
+  font-size: 22rpx;
+  font-weight: 600;
+  border-radius: 100rpx;
+  padding: 4rpx 18rpx;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.gear {
+  background: var(--surface-c);
+  border-radius: 100rpx;
+  padding: 8rpx 18rpx;
+  font-size: 26rpx;
+}
+
+.display {
+  background: var(--surface-c);
+  border-radius: 24rpx;
+  padding: 14rpx 24rpx;
+  margin-bottom: 14rpx;
+}
+
+.expr {
+  display: block;
+  color: var(--on-sv);
+  font-size: 24rpx;
+  text-align: right;
+  min-height: 32rpx;
+}
+
+.result {
+  display: block;
+  color: var(--on-surface);
+  font-size: 60rpx;
+  font-weight: 300;
+  text-align: right;
+  line-height: 1.15;
+}
+
+.krow {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+
+.key {
+  flex: 1;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  background: var(--surface-c);
+  color: var(--on-surface);
+  border-radius: 24rpx;
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.krow .key:last-child {
+  margin-right: 0;
+}
+
+.key.fn {
+  background: var(--surface-ch);
+  color: var(--on-sv);
+  font-size: 28rpx;
+}
+
+.key.op {
+  background: var(--primary-c);
+  color: var(--on-pc);
+  font-size: 40rpx;
+}
+
+.key.bs {
+  background: var(--err-c);
+  color: var(--on-err);
+  font-size: 30rpx;
+}
+
+.key.zero {
+  flex: 2.13;
+}
+
+.key.eq {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.rate-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rpx;
+}
+
+.rate-text {
+  color: var(--on-sv);
+  font-size: 20rpx;
+}
+
+.rate-btn {
+  color: var(--on-pc);
+  font-size: 22rpx;
+  margin-left: 16rpx;
+  padding: 4rpx 16rpx;
+}

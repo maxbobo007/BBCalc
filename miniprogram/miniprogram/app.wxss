@@ -1,0 +1,64 @@
+/* 全局基础样式 —— 调色板与网页版 CSS 变量一一对应 */
+
+page {
+  background: #0e0d12;
+}
+
+.page {
+  /* 浅色 */
+  --bg: #f3f3fa;
+  --surface: #ffffff;
+  --surface-c: #ededf4;
+  --surface-ch: #e2e1e8;
+  --on-surface: #1c1b1f;
+  --on-sv: #49454f;
+  --primary: #1a73e8;
+  --primary-c: rgba(26, 115, 232, 0.1);
+  --on-pc: #1a4fa0;
+  --err-c: rgba(200, 40, 20, 0.1);
+  --on-err: #b3261e;
+
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--bg);
+  padding: 16rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.page.dark {
+  --bg: #0e0d12;
+  --surface: #1c1b1f;
+  --surface-c: #2b2930;
+  --surface-ch: #36343b;
+  --on-surface: #e6e1e5;
+  --on-sv: #938f99;
+  --primary: #4285f4;
+  --primary-c: rgba(66, 133, 244, 0.18);
+  --on-pc: #a8c7fa;
+  --err-c: rgba(255, 100, 80, 0.15);
+  --on-err: #ffb4ab;
+}
+
+@media (prefers-color-scheme: dark) {
+  .page.auto {
+    --bg: #0e0d12;
+    --surface: #1c1b1f;
+    --surface-c: #2b2930;
+    --surface-ch: #36343b;
+    --on-surface: #e6e1e5;
+    --on-sv: #938f99;
+    --primary: #4285f4;
+    --primary-c: rgba(66, 133, 244, 0.18);
+    --on-pc: #a8c7fa;
+    --err-c: rgba(255, 100, 80, 0.15);
+    --on-err: #ffb4ab;
+  }
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 32rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+}

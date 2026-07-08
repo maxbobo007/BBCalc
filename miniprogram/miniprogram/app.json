@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationBarTitleText": "波波汇率计算器",
+    "navigationBarBackgroundColor": "#1c1b1f",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0e0d12"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
