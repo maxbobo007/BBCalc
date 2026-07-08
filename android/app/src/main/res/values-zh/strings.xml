@@ -12,4 +12,25 @@
     <string name="builtin_data">内置数据</string>
     <string name="calc_error">错误</string>
     <string name="pin">置顶</string>
+
+    <string name="settings">设置</string>
+    <string name="account_sync">账号同步</string>
+    <string name="sign_in_google">使用 Google 账号登录</string>
+    <string name="sign_in_hint">登录后配置自动同步到云端（与网页版共享）</string>
+    <string name="sign_in_unavailable">登录未配置：需添加 google-services.json（见 android/README.md）</string>
+    <string name="sign_in_failed">登录失败</string>
+    <string name="sign_out">退出登录</string>
+    <string name="delete_account">删除账号</string>
+    <string name="delete_confirm_title">删除账号？</string>
+    <string name="delete_confirm_text">云端保存的配置将被永久清除，此操作不可恢复。</string>
+    <string name="delete_done">账号已删除</string>
+    <string name="delete_fail">删除失败，请重新登录后再试</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确认</string>
+    <string name="theme">主题外观</string>
+    <string name="theme_light">☀️ 浅色</string>
+    <string name="theme_auto">💻 跟随设备</string>
+    <string name="theme_dark">🌙 深色</string>
+    <string name="default_base">默认基准货币</string>
+    <string name="select_currencies">选择要显示的货币</string>
 </resources>

@@ -12,4 +12,25 @@
     <string name="builtin_data">Built-in data</string>
     <string name="calc_error">Error</string>
     <string name="pin">Pin</string>
+
+    <string name="settings">Settings</string>
+    <string name="account_sync">Account Sync</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_in_hint">Settings sync to cloud after sign-in (shared with the web version)</string>
+    <string name="sign_in_unavailable">Sign-in not configured: add google-services.json (see android/README.md)</string>
+    <string name="sign_in_failed">Sign-in failed</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_confirm_title">Delete account?</string>
+    <string name="delete_confirm_text">Your cloud-saved settings will be erased permanently. This cannot be undone.</string>
+    <string name="delete_done">Account deleted</string>
+    <string name="delete_fail">Deletion failed. Please sign in again and retry.</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="theme">Appearance</string>
+    <string name="theme_light">☀️ Light</string>
+    <string name="theme_auto">💻 Auto</string>
+    <string name="theme_dark">🌙 Dark</string>
+    <string name="default_base">Default Base Currency</string>
+    <string name="select_currencies">Displayed Currencies</string>
 </resources>
